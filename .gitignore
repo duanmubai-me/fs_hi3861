@@ -1,0 +1,58 @@
+### --- Keil uVision/MDK-ARM 项目文件 --- ###
+# 忽略 Objects 和 Listings 输出目录
+[Oo]bj*/
+[Ll]ist*/
+*.o
+
+# 忽略构建产物
+*.htm
+*.axf
+*.dep
+*.crf
+*.d
+*.dep
+*.elf
+*.hex
+*.bin
+*.lnp
+*.map
+*.o
+*.out
+*.scr
+*.bak
+
+
+# 忽略调试相关文件（特别是你提到的 .debug 文件）
+*.debug
+*.iex
+*.htm
+*.cdb
+*.dbg
+*.sct
+*.jflash
+
+### --- VSCode 生成文件 --- ###
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# 如果使用 VSCode 的 C/C++ 插件，可能会生成以下文件
+.vs/
+*.vc.db
+
+### --- 系统临时文件 --- ###
+# 所有操作系统
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Windows
+*.stackdump
+[Tt]humbs.db
+hello_world.uvprojx
