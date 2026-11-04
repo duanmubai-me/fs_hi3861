@@ -1,0 +1,202 @@
+<!-- pages/dashboard/dashboard.wxml -->
+<!-- 关键交互元素 data-testid：dash-refresh / dash-fan-switch / dash-auto-switch / dash-humidity / dash-banner / dash-alarm -->
+<view class="page">
+  <!-- 顶部总体状态：刷新失败时就地切换为错误态（message + hint） -->
+  <view class="banner banner-{{banner.level}}" wx:if="{{banner}}" data-testid="dash-banner">
+    <view class="{{banner.isError ? 'banner-title' : ''}}">{{banner.text}}</view>
+    <view class="dash-banner-note" wx:if="{{banner.hint}}">{{banner.hint}}</view>
+    <view class="dash-banner-note" wx:if="{{banner.note}}">{{banner.note}}</view>
+  </view>
+
+  <view class="card empty" wx:if="{{loading && !view}}">正在读取设备状态…</view>
+
+  <view class="card" wx:elif="{{!view}}">
+    <view class="card-title">暂时没有设备状态</view>
+    <view class="note">请确认设备已上电、应用服务可用后重新读取。</view>
+    <button
+      class="btn btn-primary dash-retry"
+      hover-class="btn-pressed"
+      bindtap="onRefreshTap"
+      disabled="{{refreshing}}"
+    >{{refreshing ? '读取中…' : '重新读取'}}</button>
+  </view>
+
+  <block wx:if="{{view}}">
+    <!-- hero：设备名 + 在线状态点 + 数据年龄 + 刷新；报警中切换为 danger hero -->
+    <view class="hero {{alarmLocked ? 'hero-danger' : ''}}">
+      <view class="dash-hero-body">
+        <view class="dash-hero-kicker {{alarmLocked ? 'dash-hero-kicker-danger' : ''}}">智慧农场 · 设备总览</view>
+        <view class="hero-title dash-hero-title">{{deviceName}}</view>
+        <view class="dash-hero-meta" data-testid="dash-online">
+          <text class="dot {{onlineDotClass}}"></text>
+          <text class="dash-hero-meta-text">{{onlineText}}</text>
+          <text class="dash-hero-sep">·</text>
+          <text class="{{alarmLocked ? '' : 'muted'}}">数据年龄 {{view.ageText}}</text>
+        </view>
+      </view>
+
+      <view class="dash-hero-alarm" wx:if="{{alarmLocked}}" data-testid="dash-alarm">
+        <view class="dash-hero-alarm-title">火焰报警中</view>
+        <view class="dash-hero-alarm-text">{{alarmText}}</view>
+        <button
+          class="btn btn-danger dash-hero-alarm-btn"
+          hover-class="btn-pressed"
+          bindtap="onGoSecurity"
+        >前往安防确认解除</button>
+      </view>
+
+      <button
+        class="btn dash-hero-refresh {{alarmLocked ? 'btn-outline-danger' : 'btn-ghost'}}"
+        hover-class="btn-pressed"
+        data-testid="dash-refresh"
+        bindtap="onRefreshTap"
+        disabled="{{refreshing || fanBusy || autoBusy}}"
+      >{{refreshing ? '刷新中…' : '刷新设备状态'}}</button>
+    </view>
+
+    <!-- 环境数据：湿度大数字 + 温度 stat 卡 -->
+    <view class="section-title">环境数据</view>
+    <view class="stat-grid dash-data">
+      <view class="stat-card dash-humidity" data-testid="dash-humidity">
+        <view class="stat-label">湿度</view>
+        <view class="dash-value-line">
+          <text class="stat-value-lg {{humidityMuted ? 'dash-value-muted' : ''}}">{{humidityText}}</text>
+          <text class="stat-unit" wx:if="{{humidityUnit}}">{{humidityUnit}}</text>
+        </view>
+        <view class="dash-quality">
+          <text class="chip {{humidityChipClass}}">{{view.humidity.qualityText}}</text>
+          <text class="note dash-quality-kind">{{view.sensorKindText}}</text>
+        </view>
+        <view class="note dash-quality-note" wx:if="{{humidityNote}}">{{humidityNote}}</view>
+      </view>
+
+      <view class="stat-card dash-temperature" data-testid="dash-temperature">
+        <view class="stat-label">温度</view>
+        <view class="dash-value-line">
+          <text class="stat-value-lg {{temperatureMuted ? 'dash-value-muted' : ''}}">{{temperatureText}}</text>
+          <text class="stat-unit" wx:if="{{temperatureUnit}}">{{temperatureUnit}}</text>
+        </view>
+        <view class="note dash-sampled">采样于 {{view.sampledAtText}}</view>
+      </view>
+    </view>
+
+    <!-- 控制：风扇 / 自动模式 switch 行，失败原因就地展示 -->
+    <view class="card">
+      <view class="card-title">控制</view>
+      <view class="card-subtitle">开关会向设备发送命令，进行中不可重复操作。</view>
+
+      <view class="row dash-switch-row">
+        <view class="row-left dash-switch-label">
+          <text class="value">风扇</text>
+          <text class="dash-switch-desc">当前 {{view.fan.text}}；手动开关会退出自动模式</text>
+        </view>
+        <view class="row-right">
+          <switch
+            checked="{{view.fan.on}}"
+            disabled="{{fanBusy || autoBusy || alarmLocked}}"
+            color="#15803D"
+            data-testid="dash-fan-switch"
+            bindchange="onFanChange"
+          />
+        </view>
+      </view>
+      <view class="field-error dash-inline-error" wx:if="{{fanError}}">{{fanError}}</view>
+
+      <view class="row dash-switch-row">
+        <view class="row-left dash-switch-label">
+          <text class="value">自动模式</text>
+          <text class="dash-switch-desc">当前 {{view.mode.text}}；按湿度阈值自动控制风扇</text>
+        </view>
+        <view class="row-right">
+          <switch
+            checked="{{view.mode.isAuto}}"
+            disabled="{{fanBusy || autoBusy || alarmLocked}}"
+            color="#15803D"
+            data-testid="dash-auto-switch"
+            bindchange="onAutoChange"
+          />
+        </view>
+      </view>
+      <view class="field-error dash-inline-error" wx:if="{{autoError}}">{{autoError}}</view>
+
+      <view class="dash-lock-note" wx:if="{{alarmLocked}}">报警中禁止手动开关，请先确认解除</view>
+      <view class="note" wx:else>自动模式按湿度阈值运行；手动操作以设备回执为准。</view>
+    </view>
+
+    <!-- 2×2 快捷入口 -->
+    <view class="section-title">快捷入口</view>
+    <view class="dash-grid">
+      <view
+        class="dash-tile"
+        hover-class="dash-tile-pressed"
+        data-testid="dash-link-provisioning"
+        bindtap="onGoProvisioning"
+        aria-role="button"
+        aria-label="前往配网页"
+      >
+        <view class="dash-tile-head">
+          <text class="dash-tile-title">配网</text>
+          <text class="dash-tile-arrow">›</text>
+        </view>
+        <view class="dash-tile-desc">写入 Wi-Fi 标签</view>
+      </view>
+
+      <view
+        class="dash-tile"
+        hover-class="dash-tile-pressed"
+        data-testid="dash-link-settings"
+        bindtap="onGoSettings"
+        aria-role="button"
+        aria-label="前往设置页"
+      >
+        <view class="dash-tile-head">
+          <text class="dash-tile-title">设置</text>
+          <text class="dash-tile-arrow">›</text>
+        </view>
+        <view class="dash-tile-desc">湿度与火焰阈值</view>
+      </view>
+
+      <view
+        class="dash-tile"
+        hover-class="dash-tile-pressed"
+        data-testid="dash-link-security"
+        bindtap="onGoSecurity"
+        aria-role="button"
+        aria-label="前往安防页"
+      >
+        <view class="dash-tile-head">
+          <text class="dash-tile-title">安防</text>
+          <text class="dash-tile-arrow">›</text>
+        </view>
+        <view class="dash-tile-desc">报警状态与解除</view>
+      </view>
+
+      <view
+        class="dash-tile"
+        hover-class="dash-tile-pressed"
+        data-testid="dash-link-diagnostics"
+        bindtap="onGoDiagnostics"
+        aria-role="button"
+        aria-label="前往诊断页"
+      >
+        <view class="dash-tile-head">
+          <text class="dash-tile-title">诊断</text>
+          <text class="dash-tile-arrow">›</text>
+        </view>
+        <view class="dash-tile-desc">环境、健康与回执</view>
+      </view>
+    </view>
+    <view class="note dash-links-note">配网写入成功不等于板端读取成功或联网成功，请以设备上线状态为准。</view>
+
+    <!-- 最近回执：一句话结果 + 状态 chip -->
+    <view class="card" wx:if="{{receipt}}">
+      <view class="row dash-receipt-head">
+        <view class="row-left"><text class="label">最近回执</text></view>
+        <view class="row-right">
+          <text class="chip {{receipt.chipClass}}">{{receipt.chipText}}</text>
+        </view>
+      </view>
+      <view class="text-mono dash-receipt-text" data-testid="dash-receipt">{{receipt.text}}</view>
+    </view>
+  </block>
+</view>

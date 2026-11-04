@@ -1,0 +1,51 @@
+/* pages/security/security.wxss —— 安防页局部样式（通用样式见 app.wxss） */
+
+.badge-gap {
+  margin-left: 12rpx;
+}
+
+.device-value {
+  max-width: 60%;
+  text-align: right;
+  word-break: break-all;
+}
+
+.banner-line {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  opacity: 0.92;
+}
+
+.alarm-banner {
+  margin-top: 20rpx;
+  margin-bottom: 0;
+}
+
+.alarm-title {
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.motor-unavailable {
+  max-width: 62%;
+  text-align: right;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.mock-card {
+  border: 1rpx dashed #e2b979;
+}
+
+.mock-badge {
+  margin-left: 12rpx;
+  vertical-align: middle;
+}
+
+.footer-note {
+  padding: 0 8rpx 16rpx;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: #9aa79b;
+}

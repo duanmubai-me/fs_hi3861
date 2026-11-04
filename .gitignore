@@ -56,3 +56,17 @@ desktop.ini
 *.stackdump
 [Tt]humbs.db
 hello_world.uvprojx
+
+### --- Ğ¡³ÌĞò / Ó¦ÓÃ·şÎñ£¨wechat, gateway£© --- ###
+# Ô´ÂëÓë±ØÒªÅäÖÃÈë¿â£»ÒÔÏÂÒÀÀµ/¸öÈË/ÔËĞĞÊ±ÄÚÈİ²»Èë Git
+**/node_modules/
+**/miniprogram_npm/
+wechat/smart_farm/project.private.config.json
+wechat/smart_farm/config/local.js
+gateway/config/local.json
+gateway/.cache/
+wechat/smart_farm/logs/
+gateway/logs/
+
+# UI ’ß*ş/4ö§i
+tests/ui/artifacts/

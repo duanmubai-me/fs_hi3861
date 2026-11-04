@@ -1,0 +1,173 @@
+<!-- pages/security/security.wxml -->
+<!-- 关键交互元素 data-testid：sec-eco2 / sec-tvoc / sec-combustible / sec-flame / sec-alarm / sec-ack / sec-mock-active / sec-mock-clearing -->
+<view class="page">
+  <view wx:if="{{loading && !view}}" class="empty">正在读取设备状态…</view>
+
+  <view wx:if="{{!loading && !view}}" class="card">
+    <view class="card-title">无法读取安防状态</view>
+    <view class="note">{{error.message || '设备状态不可用'}}</view>
+    <view class="note" wx:if="{{error.hint}}">{{error.hint}}</view>
+    <button class="btn btn-ghost mt-16" bindtap="onRefreshTap" disabled="{{refreshing}}">
+      {{refreshing ? '读取中…' : '重新读取'}}
+    </button>
+  </view>
+
+  <block wx:if="{{view}}">
+    <view wx:if="{{banner}}" class="banner banner-{{banner.level}}" data-testid="sec-banner">
+      {{banner.text}}
+    </view>
+
+    <view wx:if="{{error}}" class="banner banner-err" data-testid="sec-error">
+      <view>{{error.message}}</view>
+      <view class="banner-line" wx:if="{{error.hint}}">{{error.hint}}</view>
+      <view class="banner-line" wx:if="{{error.ageText}}">
+        显示的是最后一次成功读取的状态，数据年龄 {{error.ageText}}
+      </view>
+    </view>
+
+    <view wx:if="{{notice}}" class="banner banner-{{notice.level}}" data-testid="sec-notice">
+      <view>{{notice.text}}</view>
+      <view class="banner-line" wx:if="{{notice.hint}}">{{notice.hint}}</view>
+    </view>
+
+    <view class="card">
+      <view class="row">
+        <view class="label">设备</view>
+        <view class="value device-value">{{view.deviceId || '--'}}</view>
+      </view>
+      <view class="row">
+        <view class="label">连接状态</view>
+        <view class="row-right">
+          <text class="badge {{onlineClass}}">{{onlineText}}</text>
+          <text class="badge {{freshnessClass}} badge-gap">{{freshnessText}}</text>
+        </view>
+      </view>
+      <view class="row">
+        <view class="label">数据年龄</view>
+        <view class="value">{{view.ageText}} · {{view.receivedAtText}}</view>
+      </view>
+      <view class="note" wx:if="{{!view.online || view.stale}}">
+        断网或数据过期时仍展示最后一次状态，数据年龄以上方为准。
+      </view>
+      <button class="btn btn-ghost mt-16" bindtap="onRefreshTap" disabled="{{refreshing}}">
+        {{refreshing ? '刷新中…' : '刷新状态'}}
+      </button>
+    </view>
+
+    <view class="card">
+      <view class="card-title">气体环境</view>
+      <view class="card-subtitle">
+        质量状态：<text class="badge {{gasQualityClass}}">{{view.gas.qualityText}}</text>
+      </view>
+      <view class="row" wx:for="{{gasItems}}" wx:key="key" data-testid="{{item.testId}}">
+        <view class="label">{{item.label}}</view>
+        <view class="row-right" wx:if="{{item.available}}">
+          <text class="value">{{item.text}}</text>
+        </view>
+        <text wx:else class="badge badge-muted">未配置</text>
+      </view>
+      <view class="note mt-16" wx:if="{{!view.gas.available}}">
+        设备没有可用气体传感器，各项显示“未配置”，不做气体报警判断。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">火焰检测</view>
+      <view class="row" data-testid="sec-flame">
+        <view class="label">火焰原始值</view>
+        <view class="row-right" wx:if="{{view.flame.available}}">
+          <text class="value">{{view.flame.text}}</text>
+          <text class="unit">原始值</text>
+        </view>
+        <text wx:else class="badge badge-muted">未配置</text>
+      </view>
+      <block wx:if="{{view.flame.available}}">
+        <view class="row">
+          <view class="label">检测质量</view>
+          <view class="row-right">
+            <text class="badge {{flameQualityClass}}">{{view.flame.qualityText}}</text>
+          </view>
+        </view>
+        <view class="row">
+          <view class="label">报警状态</view>
+          <view class="row-right">
+            <text class="badge {{alarmClass}}">{{view.alarm.text}}</text>
+          </view>
+        </view>
+      </block>
+      <view class="note mt-16" wx:if="{{!view.flame.available}}">
+        设备未配置火焰传感器，本页不展示火焰报警判断。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">火焰报警</view>
+      <view class="row" data-testid="sec-alarm">
+        <view class="label">报警状态</view>
+        <view class="row-right">
+          <text class="badge {{alarmClass}}">{{view.alarm.text}}</text>
+        </view>
+      </view>
+      <view class="row">
+        <view class="label">触发时间</view>
+        <view class="value">{{view.alarm.sinceText}}</view>
+      </view>
+
+      <view wx:if="{{view.alarm.active}}" class="banner banner-err alarm-banner" data-testid="sec-alarm-banner">
+        <view class="alarm-title">火焰报警中</view>
+        <view>已停止灌溉输出，请立即到现场确认火情。</view>
+      </view>
+      <view wx:elif="{{view.alarm.status === 'clearing'}}" class="banner banner-warn alarm-banner">
+        解除条件已满足，可点击下方按钮确认解除报警。
+      </view>
+
+      <button class="btn btn-primary mt-16" data-testid="sec-ack" bindtap="onAcknowledge" disabled="{{ackDisabled}}">
+        {{ackText}}
+      </button>
+      <view class="note mt-16" wx:if="{{!canAck}}">
+        报警仍未解除：需先满足解除条件，设备会拒绝当前确认操作。
+      </view>
+      <view class="note mt-16" wx:elif="{{view.alarm.status === 'clearing'}}">
+        解除条件已满足：确认后清除报警锁，灌溉输出不会自动恢复，请到总览页重新开启。
+      </view>
+      <view class="note mt-16" wx:else>
+        当前没有报警锁定，确认操作不会改变设备状态。
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">电机方向</view>
+      <view class="row">
+        <view class="label">当前方向</view>
+        <view class="row-right" wx:if="{{view.motor.available}}">
+          <text class="value">{{view.motor.text}}</text>
+        </view>
+        <text wx:else class="muted motor-unavailable">未配置（需可反转电机驱动板）</text>
+      </view>
+      <view class="note mt-16" wx:if="{{!view.motor.available}}">
+        设备能力位不支持电机反转，安防页不展示方向控制。
+      </view>
+    </view>
+
+    <view class="card mock-card" wx:if="{{isMock}}">
+      <view class="card-title">
+        模拟演示
+        <text class="badge badge-warn mock-badge">模拟</text>
+      </view>
+      <view class="note">当前为 mock 环境：按钮只改变应用内模拟设备状态，不会影响真实硬件。</view>
+      <button class="btn btn-ghost mt-16" data-testid="sec-mock-active" bindtap="onMockActive" disabled="{{busy}}">
+        {{mockActiveText}}
+      </button>
+      <button class="btn btn-ghost mt-16" data-testid="sec-mock-clearing" bindtap="onMockClearing" disabled="{{busy}}">
+        {{mockClearingText}}
+      </button>
+      <view class="note mt-16">
+        演示顺序：模拟火焰报警 → 报警中（不可确认）→ 模拟解除条件 → 确认解除报警。
+      </view>
+    </view>
+
+    <view class="footer-note">
+      安防读数来自设备上报；离线或数据过期时继续展示最后一次状态，并标注数据年龄。
+    </view>
+  </block>
+</view>

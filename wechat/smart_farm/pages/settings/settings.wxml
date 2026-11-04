@@ -1,0 +1,232 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="empty">正在读取设备配置…</view>
+
+  <block wx:else>
+    <view wx:if="{{banner}}" class="banner {{banner.className}}">
+      <view>{{banner.text}}</view>
+      <view wx:if="{{banner.hint}}" class="banner-hint">{{banner.hint}}</view>
+    </view>
+
+    <view wx:if="{{!view}}" class="card">
+      <view class="empty">尚未获取到设备状态</view>
+      <button
+        class="btn btn-ghost"
+        data-testid="set-retry"
+        bindtap="onRefreshTap"
+        disabled="{{refreshing}}"
+      >
+        {{refreshing ? '正在读取…' : '重新读取'}}
+      </button>
+    </view>
+
+    <block wx:if="{{view}}">
+      <view class="card">
+        <view class="section-head">
+          <view class="card-title">设备已确认值</view>
+          <text class="badge {{configStatusClass}}">{{view.config.configStatusText}}</text>
+        </view>
+        <view class="card-subtitle">设备回读的已确认配置（只读）；状态见右上角，草稿修改后需点击“保存到设备”。</view>
+
+        <view class="row">
+          <view class="row-left"><text class="label">湿度类型</text></view>
+          <view class="row-right"><text class="value">{{view.sensorKindText}}</text></view>
+        </view>
+        <view class="row">
+          <view class="row-left"><text class="label">湿度下限</text></view>
+          <view class="row-right">
+            <text class="value">{{view.config.lowerText}}</text>
+            <text class="unit">{{humidityUnit}}</text>
+          </view>
+        </view>
+        <view class="row">
+          <view class="row-left"><text class="label">湿度上限</text></view>
+          <view class="row-right">
+            <text class="value">{{view.config.upperText}}</text>
+            <text class="unit">{{humidityUnit}}</text>
+          </view>
+        </view>
+        <view class="row">
+          <view class="row-left"><text class="label">配置版本</text></view>
+          <view class="row-right"><text class="value">revision {{view.config.configRevision}}</text></view>
+        </view>
+        <view class="row">
+          <view class="row-left"><text class="label">更新时间</text></view>
+          <view class="row-right"><text class="value">{{view.config.updatedAtText}}</text></view>
+        </view>
+        <view class="row">
+          <view class="row-left"><text class="label">设备</text></view>
+          <view class="row-right"><text class="value">{{view.deviceId}}</text></view>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="section-head">
+          <view class="card-title">湿度阈值草稿</view>
+          <text wx:if="{{humidityDirty}}" class="badge badge-warn" data-testid="set-dirty">未保存</text>
+          <text wx:else class="badge badge-muted">与设备一致</text>
+        </view>
+        <view class="card-subtitle">
+          本地草稿，仅影响本页输入；点击“保存到设备”后才会写入设备。
+        </view>
+
+        <view class="field-row">
+          <view class="field flex-1">
+            <view class="field-label">下限（0–100 整数）</view>
+            <input
+              class="input {{lowerError ? 'input-error' : ''}}"
+              type="number"
+              maxlength="3"
+              value="{{lowerDraft}}"
+              placeholder="如 30"
+              data-testid="set-lower"
+              bindinput="onLowerInput"
+              disabled="{{humiditySaving}}"
+            />
+            <view wx:if="{{lowerError}}" class="field-error">{{lowerError}}</view>
+          </view>
+          <view class="field flex-1">
+            <view class="field-label">上限（0–100 整数）</view>
+            <input
+              class="input {{upperError ? 'input-error' : ''}}"
+              type="number"
+              maxlength="3"
+              value="{{upperDraft}}"
+              placeholder="如 40"
+              data-testid="set-upper"
+              bindinput="onUpperInput"
+              disabled="{{humiditySaving}}"
+            />
+            <view wx:if="{{upperError}}" class="field-error">{{upperError}}</view>
+          </view>
+        </view>
+        <view class="field-hint">
+          仅支持 0–100 的整数，且下限必须小于上限；单位为 {{humidityUnit}}。
+        </view>
+
+        <button
+          class="btn btn-primary mt-16"
+          data-testid="set-save"
+          bindtap="onSaveThresholds"
+          disabled="{{humiditySaving || !humidityValid}}"
+          loading="{{humiditySaving}}"
+        >
+          {{humiditySaving ? '正在保存…' : '保存到设备'}}
+        </button>
+
+        <view
+          class="status status-{{humidityStatus ? humidityStatus.level : 'muted'}}"
+          data-testid="set-status"
+        >
+          <block wx:if="{{humidityStatus}}">
+            <view>{{humidityStatus.text}}</view>
+            <view wx:if="{{humidityStatus.hint}}" class="status-hint">{{humidityStatus.hint}}</view>
+          </block>
+          <block wx:else>尚未提交修改</block>
+        </view>
+
+        <view wx:if="{{conflict && conflictSection === 'humidity'}}" class="conflict-box">
+          <view class="note">配置版本冲突：请先刷新设备状态，再重新保存。</view>
+          <button
+            class="btn btn-ghost btn-mini conflict-btn"
+            data-testid="set-refresh"
+            bindtap="onRefreshTap"
+            disabled="{{refreshing}}"
+          >
+            {{refreshing ? '正在刷新…' : '刷新设备状态'}}
+          </button>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="section-head">
+          <view class="card-title">火焰阈值草稿</view>
+          <text wx:if="{{flameDirty}}" class="badge badge-warn" data-testid="flame-dirty">未保存</text>
+          <text wx:elif="{{flameAvailable}}" class="badge badge-muted">与设备一致</text>
+          <text wx:else class="badge badge-muted">未配置</text>
+        </view>
+
+        <view class="card-subtitle">
+          设备已确认：触发 {{view.config.flameTripText}} / 解除 {{view.config.flameClearText}}。
+        </view>
+        <view wx:if="{{flameAvailable}}" class="card-subtitle">
+          当前火焰原始值：{{view.flame.text}}（{{view.flame.qualityText}}）。
+        </view>
+
+        <view
+          wx:if="{{!flameAvailable}}"
+          class="banner banner-warn flame-unavailable"
+          data-testid="flame-unavailable"
+        >
+          设备未配置火焰检测，本区域已禁用，无法保存火焰阈值。
+        </view>
+
+        <view class="field-row">
+          <view class="field flex-1">
+            <view class="field-label">触发阈值（0–4095）</view>
+            <input
+              class="input {{flameTripError ? 'input-error' : ''}}"
+              type="number"
+              maxlength="4"
+              value="{{flameTripDraft}}"
+              placeholder="如 160"
+              data-testid="flame-trip"
+              bindinput="onFlameTripInput"
+              disabled="{{flameSaving || !flameAvailable}}"
+            />
+            <view wx:if="{{flameTripError}}" class="field-error">{{flameTripError}}</view>
+          </view>
+          <view class="field flex-1">
+            <view class="field-label">解除阈值（0–4095）</view>
+            <input
+              class="input {{flameClearError ? 'input-error' : ''}}"
+              type="number"
+              maxlength="4"
+              value="{{flameClearDraft}}"
+              placeholder="如 120"
+              data-testid="flame-clear"
+              bindinput="onFlameClearInput"
+              disabled="{{flameSaving || !flameAvailable}}"
+            />
+            <view wx:if="{{flameClearError}}" class="field-error">{{flameClearError}}</view>
+          </view>
+        </view>
+        <view class="field-hint">
+          仅支持 0–4095 的整数，且触发阈值必须大于解除阈值。
+        </view>
+
+        <button
+          class="btn btn-primary mt-16"
+          data-testid="flame-save"
+          bindtap="onSaveFlame"
+          disabled="{{flameSaving || !flameAvailable || !flameValid}}"
+          loading="{{flameSaving}}"
+        >
+          {{flameSaving ? '正在保存…' : '保存到设备'}}
+        </button>
+
+        <view
+          class="status status-{{flameStatus ? flameStatus.level : 'muted'}}"
+          data-testid="flame-status"
+        >
+          <block wx:if="{{flameStatus}}">
+            <view>{{flameStatus.text}}</view>
+            <view wx:if="{{flameStatus.hint}}" class="status-hint">{{flameStatus.hint}}</view>
+          </block>
+          <block wx:else>{{flameAvailable ? '尚未提交修改' : '设备未配置火焰检测'}}</block>
+        </view>
+
+        <view wx:if="{{conflict && conflictSection === 'flame'}}" class="conflict-box">
+          <view class="note">配置版本冲突：请先刷新设备状态，再重新保存。</view>
+          <button
+            class="btn btn-ghost btn-mini conflict-btn"
+            data-testid="set-refresh"
+            bindtap="onRefreshTap"
+            disabled="{{refreshing}}"
+          >
+            {{refreshing ? '正在刷新…' : '刷新设备状态'}}
+          </button>
+        </view>
+      </view>
+    </block>
+  </block>
+</view>

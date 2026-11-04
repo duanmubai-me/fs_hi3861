@@ -1,0 +1,310 @@
+<view class="container">
+  <view wx:if="{{banner}}" class="banner banner-{{banner.level}}" data-testid="diag-banner">
+    <view>{{banner.text}}</view>
+    <view wx:if="{{banner.hint}}" class="banner-hint">{{banner.hint}}</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">正在读取设备状态…</view>
+
+  <!-- 运行环境 -->
+  <view class="card">
+    <view class="card-title">运行环境</view>
+    <view class="card-subtitle">当前生效：{{envModeText}} · 保存后重建传输层并立即刷新状态</view>
+
+    <view class="field">
+      <view class="field-label">连接模式</view>
+      <picker
+        mode="selector"
+        range="{{modeOptions}}"
+        range-key="label"
+        value="{{modeIndex}}"
+        disabled="{{savingEnv}}"
+        bindchange="onModeChange"
+        data-testid="diag-mode"
+      >
+        <view class="picker-box">
+          <text>{{modeLabel}}</text>
+          <text class="picker-arrow">切换</text>
+        </view>
+      </picker>
+      <view class="field-hint">mock 使用应用内模拟设备；gateway 连接本机应用服务。切换后需点击保存。</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">应用服务地址 baseUrl</view>
+      <input
+        class="input"
+        value="{{form.baseUrl}}"
+        placeholder="http://127.0.0.1:8080"
+        maxlength="200"
+        disabled="{{savingEnv}}"
+        bindinput="onBaseUrlInput"
+        data-testid="diag-baseurl"
+      />
+      <view class="field-hint">gateway 模式使用；mock 模式仅作展示。</view>
+      <view wx:if="{{formErrors.baseUrl}}" class="field-error">{{formErrors.baseUrl}}</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">设备 ID</view>
+      <input
+        class="input"
+        value="{{form.deviceId}}"
+        placeholder="mock-farm-001"
+        maxlength="64"
+        disabled="{{savingEnv}}"
+        bindinput="onDeviceIdInput"
+        data-testid="diag-deviceid"
+      />
+      <view class="field-hint">1–64 位字母、数字、下划线或短横线。</view>
+      <view wx:if="{{formErrors.deviceId}}" class="field-error">{{formErrors.deviceId}}</view>
+    </view>
+
+    <view wx:if="{{env}}" class="env-readonly">
+      <view class="row">
+        <text class="label">pollIntervalMs</text>
+        <text class="value">{{env.pollIntervalMs}} ms</text>
+      </view>
+      <view class="row">
+        <text class="label">staleAfterMs</text>
+        <text class="value">{{env.staleAfterMs}} ms</text>
+      </view>
+    </view>
+
+    <button
+      class="btn btn-primary mt-16"
+      data-testid="diag-save"
+      bindtap="onSaveEnv"
+      disabled="{{savingEnv}}"
+      loading="{{savingEnv}}"
+    >保存并刷新</button>
+    <button
+      class="btn btn-ghost mt-16"
+      data-testid="diag-reset-env"
+      bindtap="onResetEnv"
+      disabled="{{savingEnv}}"
+    >恢复默认 mock 环境</button>
+    <view wx:if="{{envMessage}}" class="field-hint env-ok">{{envMessage}}</view>
+  </view>
+
+  <!-- 健康检查 -->
+  <view class="card">
+    <view class="card-title">健康检查</view>
+    <view class="card-subtitle">调用 device.health()，检查传输层与应用服务状态。</view>
+    <button
+      class="btn btn-ghost"
+      data-testid="diag-health"
+      bindtap="onHealth"
+      disabled="{{checkingHealth}}"
+      loading="{{checkingHealth}}"
+    >检查健康状态</button>
+
+    <view wx:if="{{health}}" class="mt-16">
+      <view class="row">
+        <text class="label">ok</text>
+        <text class="badge {{health.okClass}}">{{health.okText}}</text>
+      </view>
+      <view class="row">
+        <text class="label">provider</text>
+        <text class="value kv-value">{{health.provider}}</text>
+      </view>
+      <view class="row">
+        <text class="label">version</text>
+        <text class="value kv-value">{{health.version}}</text>
+      </view>
+      <view class="row">
+        <text class="label">bootId</text>
+        <text class="value kv-value">{{health.bootId}}</text>
+      </view>
+      <view class="row">
+        <text class="label">deviceId</text>
+        <text class="value kv-value">{{health.deviceId}}</text>
+      </view>
+      <view class="row">
+        <text class="label">uptimeMs</text>
+        <text class="value kv-value">{{health.uptimeText}}</text>
+      </view>
+      <view wx:if="{{health.note}}" class="health-note">{{health.note}}</view>
+    </view>
+
+    <view wx:if="{{healthError}}" class="mt-16">
+      <view class="field-error">{{healthError.text}}</view>
+      <view wx:if="{{healthError.hint}}" class="field-hint">{{healthError.hint}}</view>
+    </view>
+  </view>
+
+  <!-- 传输层 -->
+  <view class="card">
+    <view class="card-title">传输层</view>
+    <view class="row">
+      <text class="label">transport</text>
+      <text class="value kv-value">{{transportName}}</text>
+    </view>
+    <view class="row">
+      <text class="label">描述</text>
+      <text class="value kv-value">{{transportDescribe}}</text>
+    </view>
+    <view class="row">
+      <text class="label">小程序版本</text>
+      <text class="value">{{appVersion}}</text>
+    </view>
+  </view>
+
+  <!-- 最近回执 -->
+  <view class="card">
+    <view class="card-title">最近回执</view>
+    <view class="card-subtitle">来自 device.getLastCommand()，只保留最近一次命令。</view>
+    <view data-testid="diag-command">
+      <view wx:if="{{lastCommand}}">
+        <view class="row">
+          <text class="label">action</text>
+          <text class="value kv-value">{{lastCommand.action}}</text>
+        </view>
+        <view class="row">
+          <text class="label">requestId</text>
+          <text class="value kv-value">{{lastCommand.requestId}}</text>
+        </view>
+        <view class="row">
+          <text class="label">status</text>
+          <text class="badge {{lastCommand.statusClass}}">{{lastCommand.status}}</text>
+        </view>
+        <view class="row">
+          <text class="label">saved</text>
+          <text class="value">{{lastCommand.savedText}}</text>
+        </view>
+        <view class="row">
+          <text class="label">configRevision</text>
+          <text class="value">{{lastCommand.configRevision}}</text>
+        </view>
+        <view class="row">
+          <text class="label">error.code</text>
+          <text class="value kv-value">{{lastCommand.errorCode}}</text>
+        </view>
+        <view wx:if="{{lastCommand.errorMessage}}" class="field-error mt-16">{{lastCommand.errorMessage}}</view>
+      </view>
+      <view wx:else class="empty">暂无命令记录</view>
+    </view>
+  </view>
+
+  <!-- 能力位 -->
+  <view class="card">
+    <view class="card-title">设备能力位</view>
+    <view class="card-subtitle">只读 JSON（view.capabilities），不做格式化与推断。</view>
+    <text class="json-text" user-select="true">{{capabilitiesText}}</text>
+  </view>
+
+  <!-- mock 专用 -->
+  <view wx:if="{{isMock}}" class="card">
+    <view class="card-title">mock 故障注入</view>
+    <view class="card-subtitle">仅 mock 模式可见；切换后写回设备并立即刷新状态。</view>
+
+    <view class="row">
+      <view class="row-left">
+        <text class="fault-label">offline</text>
+        <text class="fault-note">设备离线</text>
+      </view>
+      <view class="row-right">
+        <switch
+          class="fault-switch"
+          checked="{{faults.offline}}"
+          color="#2f7d4f"
+          disabled="{{mockBusy}}"
+          data-key="offline"
+          bindchange="onFaultChange"
+          data-testid="diag-fault-offline"
+        />
+      </view>
+    </view>
+
+    <view class="row">
+      <view class="row-left">
+        <text class="fault-label">sensorError</text>
+        <text class="fault-note">传感器故障</text>
+      </view>
+      <view class="row-right">
+        <switch
+          class="fault-switch"
+          checked="{{faults.sensorError}}"
+          color="#2f7d4f"
+          disabled="{{mockBusy}}"
+          data-key="sensorError"
+          bindchange="onFaultChange"
+          data-testid="diag-fault-sensor"
+        />
+      </view>
+    </view>
+
+    <view class="row">
+      <view class="row-left">
+        <text class="fault-label">nvWriteError</text>
+        <text class="fault-note">写存储失败</text>
+      </view>
+      <view class="row-right">
+        <switch
+          class="fault-switch"
+          checked="{{faults.nvWriteError}}"
+          color="#2f7d4f"
+          disabled="{{mockBusy}}"
+          data-key="nvWriteError"
+          bindchange="onFaultChange"
+          data-testid="diag-fault-nvwrite"
+        />
+      </view>
+    </view>
+
+    <view class="row">
+      <view class="row-left">
+        <text class="fault-label">nvVerifyError</text>
+        <text class="fault-note">回读校验失败</text>
+      </view>
+      <view class="row-right">
+        <switch
+          class="fault-switch"
+          checked="{{faults.nvVerifyError}}"
+          color="#2f7d4f"
+          disabled="{{mockBusy}}"
+          data-key="nvVerifyError"
+          bindchange="onFaultChange"
+          data-testid="diag-fault-nvverify"
+        />
+      </view>
+    </view>
+
+    <button
+      class="btn btn-ghost mt-16"
+      data-testid="diag-reset"
+      bindtap="onResetMock"
+      disabled="{{mockBusy}}"
+    >重置 mock 设备</button>
+
+    <view class="divider"></view>
+
+    <view class="field-label">模拟报警（mock）</view>
+    <view class="note">触发后会立即刷新状态；报警激活时设备会拒绝手动/自动控制命令。</view>
+    <view class="mock-buttons">
+      <button
+        class="btn btn-ghost"
+        data-testid="diag-mock-active"
+        data-status="active"
+        bindtap="onMockAlarm"
+        disabled="{{mockBusy}}"
+      >触发报警</button>
+      <button
+        class="btn btn-ghost"
+        data-testid="diag-mock-clearing"
+        data-status="clearing"
+        bindtap="onMockAlarm"
+        disabled="{{mockBusy}}"
+      >进入解除</button>
+      <button
+        class="btn btn-ghost"
+        data-testid="diag-mock-normal"
+        data-status="normal"
+        bindtap="onMockAlarm"
+        disabled="{{mockBusy}}"
+      >恢复正常</button>
+    </view>
+  </view>
+
+  <view class="footer-note">诊断信息只读展示，不包含任何凭据信息。</view>
+</view>

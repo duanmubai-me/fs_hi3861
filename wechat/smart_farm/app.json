@@ -1,0 +1,51 @@
+{
+  "pages": [
+    "pages/dashboard/dashboard",
+    "pages/provisioning/provisioning",
+    "pages/settings/settings",
+    "pages/security/security",
+    "pages/diagnostics/diagnostics"
+  ],
+  "window": {
+    "navigationBarTitleText": "智慧农业",
+    "navigationBarBackgroundColor": "#f0fdf4",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f0fdf4",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#15803d",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/dashboard/dashboard",
+        "text": "总览",
+        "iconPath": "assets/tabbar/overview.png",
+        "selectedIconPath": "assets/tabbar/overview-active.png"
+      },
+      {
+        "pagePath": "pages/provisioning/provisioning",
+        "text": "配网",
+        "iconPath": "assets/tabbar/provision.png",
+        "selectedIconPath": "assets/tabbar/provision-active.png"
+      },
+      {
+        "pagePath": "pages/settings/settings",
+        "text": "设置",
+        "iconPath": "assets/tabbar/settings.png",
+        "selectedIconPath": "assets/tabbar/settings-active.png"
+      },
+      {
+        "pagePath": "pages/security/security",
+        "text": "安防",
+        "iconPath": "assets/tabbar/security.png",
+        "selectedIconPath": "assets/tabbar/security-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,111 @@
+/* pages/diagnostics/diagnostics.wxss
+ * 诊断页局部样式；card/row/label/value/badge/btn/input/field 等复用 app.wxss。
+ */
+
+.loading-line {
+  padding: 8rpx 4rpx 20rpx;
+  font-size: 24rpx;
+  color: #7a8579;
+}
+
+.picker-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 84rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid #d9e2d7;
+  border-radius: 12rpx;
+  background: #fbfdfa;
+  box-sizing: border-box;
+  font-size: 30rpx;
+}
+
+.picker-arrow {
+  font-size: 22rpx;
+  color: #7a8579;
+}
+
+.env-readonly {
+  margin-top: 8rpx;
+  padding: 0 20rpx;
+  border-radius: 12rpx;
+  background: #f6f8f5;
+}
+
+.env-ok {
+  color: #2f7d4f;
+}
+
+.kv-value {
+  max-width: 68%;
+  text-align: right;
+  word-break: break-all;
+}
+
+.banner-hint {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  opacity: 0.85;
+}
+
+.health-note {
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  background: #fff4e5;
+  color: #8a5300;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.json-text {
+  display: block;
+  margin-top: 8rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 12rpx;
+  background: #f6f8f5;
+  color: #3a4a3e;
+  font-family: Menlo, Consolas, "Courier New", monospace;
+  font-size: 22rpx;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.fault-label {
+  font-size: 26rpx;
+  color: #4a5a4e;
+}
+
+.fault-note {
+  margin-left: 10rpx;
+  font-size: 22rpx;
+  color: #9aa79b;
+}
+
+.fault-switch {
+  transform: scale(0.9);
+}
+
+.mock-buttons {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.mock-buttons .btn {
+  flex: 1;
+  width: auto;
+  padding: 0 8rpx;
+  font-size: 24rpx;
+  line-height: 72rpx;
+}
+
+.footer-note {
+  padding: 8rpx 24rpx 24rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #9aa79b;
+  line-height: 1.7;
+}

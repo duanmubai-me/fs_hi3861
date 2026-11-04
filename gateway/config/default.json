@@ -1,0 +1,8 @@
+{
+  "host": "127.0.0.1",
+  "port": 8080,
+  "provider": "mock",
+  "deviceId": "mock-farm-001",
+  "staleAfterMs": 90000,
+  "commandTimeoutMs": 8000
+}

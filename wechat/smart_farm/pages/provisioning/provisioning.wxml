@@ -1,0 +1,167 @@
+<view class="container">
+  <view wx:if="{{banner}}" class="banner banner-{{banner.level}}">
+    {{banner.text}}
+  </view>
+
+  <view class="card">
+    <view class="card-head">
+      <view class="card-title">NFC 能力</view>
+      <text wx:if="{{capability}}" class="badge {{capability.badgeClass}}">{{capability.statusText}}</text>
+    </view>
+    <block wx:if="{{capability}}">
+      <view class="row">
+        <text class="label">运行平台</text>
+        <text class="value">{{capability.platformText}}</text>
+      </view>
+      <view class="note capability-note">{{capability.note}}</view>
+      <view wx:if="{{capability.needAssist}}" class="assist-box">{{capability.assistText}}</view>
+      <view wx:else class="note capability-note">{{capability.assistText}}</view>
+      <view class="env-hint">{{environmentNote}}</view>
+    </block>
+    <view wx:else class="empty">正在读取 NFC 能力…</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">Wi-Fi 信息</view>
+    <view class="card-subtitle">记录格式固定为 example-nfc-v1，仅支持可见 ASCII 字符。</view>
+
+    <view class="field">
+      <view class="field-label">Wi-Fi 名称（SSID）</view>
+      <input
+        class="input {{fieldErrors.ssid ? 'input-error' : ''}}"
+        value="{{ssid}}"
+        placeholder="例如 Lab24G"
+        maxlength="32"
+        disabled="{{writing}}"
+        bindinput="onSsidInput"
+        data-testid="prov-ssid"
+      />
+      <view wx:if="{{fieldErrors.ssid}}" class="field-error">{{fieldErrors.ssid}}</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">Wi-Fi 密码</view>
+      <input
+        class="input {{fieldErrors.passwd ? 'input-error' : ''}}"
+        password="{{true}}"
+        value="{{passwd}}"
+        placeholder="开放网络可留空"
+        maxlength="63"
+        disabled="{{writing}}"
+        bindinput="onPasswdInput"
+        data-testid="prov-passwd"
+      />
+      <view wx:if="{{fieldErrors.passwd}}" class="field-error">{{fieldErrors.passwd}}</view>
+      <view class="field-hint">密码只用于构造本次 NFC 记录，不写入本地存储，也不会在结果区回显。</view>
+    </view>
+
+    <view class="note form-note">
+      当前记录使用单条 NDEF 记录，中文、双引号、反斜杠和控制字符会被拒绝。密码短于 8 位时仍可写入，但需留意提示。
+    </view>
+
+    <button
+      class="btn btn-primary write-btn"
+      bindtap="onWrite"
+      disabled="{{writing}}"
+      data-testid="prov-write"
+    >
+      {{writing ? '正在写入…' : writeButtonText}}
+    </button>
+  </view>
+
+  <view class="card" data-testid="prov-progress">
+    <view class="card-head">
+      <view class="card-title">写入进度</view>
+      <text class="badge badge-muted">{{steps.length}} 步</text>
+    </view>
+    <view wx:if="{{steps.length > 0}}" class="steps">
+      <view wx:for="{{steps}}" wx:key="step" class="step">
+        <view class="step-index">{{index + 1}}</view>
+        <view class="step-main">
+          <view class="step-text">{{item.text}}</view>
+          <view wx:if="{{item.detail}}" class="step-detail">{{item.detail}}</view>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty progress-empty">
+      {{writing ? '正在准备…' : '尚未开始写入'}}
+    </view>
+  </view>
+
+  <view class="card" data-testid="prov-result">
+    <view class="card-head">
+      <view class="card-title">写入结果</view>
+      <text wx:if="{{error}}" class="badge badge-err">写入失败</text>
+      <text wx:elif="{{writing}}" class="badge badge-muted">进行中</text>
+      <text wx:elif="{{result}}" class="badge {{result.badgeClass}}">{{result.modeText}}</text>
+    </view>
+
+    <view wx:if="{{error}}" class="result-error">
+      <view class="result-message">{{error.message}}</view>
+      <view wx:if="{{error.hint}}" class="error-hint">{{error.hint}}</view>
+      <view class="error-retry">修改上方 Wi-Fi 信息后可重新写入。</view>
+    </view>
+
+    <block wx:elif="{{result}}">
+      <view wx:if="{{result.simulated}}" class="result-warning">
+        模拟写入不代表板端读取/联网成功；请以板端实际读取和联网结果为准。
+      </view>
+      <view wx:else class="result-info">
+        标签写入已完成，但只代表 NDEF 记录写入成功；板端读取、配网和云上线仍需现场验证。
+      </view>
+
+      <view class="row">
+        <text class="label">SSID</text>
+        <text class="value result-ssid">{{result.ssid}}</text>
+      </view>
+      <view class="row">
+        <text class="label">TNF</text>
+        <text class="value">{{result.tnf}}</text>
+      </view>
+      <view class="row">
+        <text class="label">type</text>
+        <text class="value">{{result.typeText}}（{{result.typeBytes}} 字节）</text>
+      </view>
+      <view class="row">
+        <text class="label">id 长度</text>
+        <text class="value">{{result.idLength}} 字节</text>
+      </view>
+      <view class="row">
+        <text class="label">payload 长度</text>
+        <text class="value">{{result.payloadLength}} 字节</text>
+      </view>
+      <view class="row">
+        <text class="label">总字节</text>
+        <text class="value">{{result.totalBytes}} 字节</text>
+      </view>
+
+      <view class="payload-block">
+        <view class="field-label">Payload 脱敏摘要（密码已隐藏）</view>
+        <view class="payload-summary">{{result.payloadSummary}}</view>
+      </view>
+
+      <block wx:if="{{!result.simulated}}">
+        <view class="row verify-row">
+          <text class="label">回读校验（verified）</text>
+          <text class="value">{{result.verifiedLabel}}</text>
+        </view>
+        <view wx:if="{{result.verifyMessage}}" class="verify-message">verifyMessage：{{result.verifyMessage}}</view>
+        <view wx:if="{{!result.verified}}" class="mismatch">
+          回读内容与写入不一致或不完整，请重新写入或更换标签。
+        </view>
+      </block>
+
+      <view class="warnings">
+        <view class="field-label">警示</view>
+        <block wx:if="{{result.hasWarnings}}">
+          <view wx:for="{{result.warnings}}" wx:key="*this" class="warning-line">· {{item}}</view>
+        </block>
+        <view wx:else class="note">无额外警示</view>
+      </view>
+    </block>
+
+    <view wx:else class="empty result-empty">
+      {{writing ? '正在写入标签…' : '尚未发起写入'}}
+    </view>
+  </view>
+</view>
