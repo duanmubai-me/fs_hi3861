@@ -15,7 +15,7 @@ import("//build/lite/config/component/lite_component.gni")
 
 lite_component("demo") {
   features = [
-     "base_01_key:base_key_example",
+    # "base_01_key:base_key_example",
     # "base_02_i2c_pcf8574_fan:base_fan_example",
     # "base_03_i2c_pcf8574_buzzer:base_buzzer_example",
     # "base_04_i2c_pcf8574_led:base_led_example",
@@ -23,7 +23,7 @@ lite_component("demo") {
     # "base_06_i2c_sht20:base_sht20_example",
     # "base_07_i2c_ap3216c:base_ap3216c_example",
     # "base_08_i2c_ssd1306:base_ssd1306_example",
-     "base_09_i2c_nfc:base_nfc_example",
+    # "base_09_i2c_nfc:base_nfc_example",
 
     # "kernel_01_task:kernel_task_example",
     # "kernel_02_timer:kernel_timer_example",
@@ -45,7 +45,7 @@ lite_component("demo") {
     # "smartDistance:smartDistance_demo",
     # "ReversingRadar:ReversingRadar_demo",
     # "smartLamp:smartLamp_demo",
-    #"smartFarm:smartFarm_demo",
+    "smartFarm:smartFarm_demo",
     # "cloud_01_HuaWei_IoTDA:cloud_huawei_iotda_example",
     # "smartSecurityDefense:smartSecurityDefense_demo",
 

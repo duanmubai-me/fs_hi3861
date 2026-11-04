@@ -124,7 +124,10 @@ int mqtt_init(void)
         printf("mqttClient_init\r\n");
         oled_consle_log("==mqtt cli no==");
         sleep(TASK_INIT_DELAY);
-        SSD1306_CLS(); // 清屏
+        SSD1306_CLS();
+        // 服务器断开后重新建链，否则一直在死 socket 上重试
+        MQTTClient_unConnectServer();
+        MQTTClient_connectServer(SERVER_IP_ADDR, SERVER_IP_PORT);
     }
     printf("mqttClient_init\r\n");
     oled_consle_log("==mqtt cli yes=");

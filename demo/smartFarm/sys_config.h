@@ -19,17 +19,17 @@
 #include "cmsis_os2.h"
 #include "hal_bsp_structAll.h"
 
-// DeviceSecret fs12345678
+// DeviceSecret 8bdc62bb40072d992d4afdd587aa8bdc9eabb1201272755549c5e31923c04711
 // 设备ID
-#define DEVICE_ID ""
+#define DEVICE_ID "6aea94a07f2e6c302faa0e1b_hi3861"
 // MQTT客户端ID
-#define MQTT_CLIENT_ID ""
+#define MQTT_CLIENT_ID "6aea94a07f2e6c302faa0e1b_hi3861_0_0_2026110407"
 // MQTT用户名
-#define MQTT_USER_NAME ""
+#define MQTT_USER_NAME "6aea94a07f2e6c302faa0e1b_hi3861"
 // MQTT密码
-#define MQTT_PASS_WORD ""
+#define MQTT_PASS_WORD "8bdc62bb40072d992d4afdd587aa8bdc9eabb1201272755549c5e31923c04711"
 // 华为云平台的IP地址
-#define SERVER_IP_ADDR ""
+#define SERVER_IP_ADDR "117.78.5.125"
 // 华为云平台的IP端口号
 #define SERVER_IP_PORT 1883
 // 订阅 接收控制命令的主题
