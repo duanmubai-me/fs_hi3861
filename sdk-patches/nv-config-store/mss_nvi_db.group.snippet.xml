@@ -1,0 +1,6 @@
+
+  <!-- Smart Farm 应用配置：A/B 两槽，64 字节；与 demo/smartFarm/services/config_store 对应 -->
+  <GROUP NAME="App" ID="0x4" FEATURE="1&lt;&lt;0,1&lt;&lt;4,1&lt;&lt;5" USEDMODE="0" PARAM_DEF_FILE="../nv/nv_app_struct_def.txt">
+    <NV ID="0xA0" NAME="SMART_FARM_CONFIG_A" PARAM_NAME="smart_farm_config_nv" PARAM_VALUE="{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}" CATEGORY="APP" DEV="CCO-STA-NDM" DESCRIPTION="Smart Farm config slot A" />
+    <NV ID="0xA1" NAME="SMART_FARM_CONFIG_B" PARAM_NAME="smart_farm_config_nv" PARAM_VALUE="{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}" CATEGORY="APP" DEV="CCO-STA-NDM" DESCRIPTION="Smart Farm config slot B" />
+  </GROUP>
