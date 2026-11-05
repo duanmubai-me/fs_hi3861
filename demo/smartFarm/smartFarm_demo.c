@@ -219,26 +219,44 @@ static void smartFarm_Project_example(void)
     printf("Enter smartFarm_Project_example()!\r\n");
     p_MQTTClient_sub_callback = &mqttClient_sub_callback;
     MUTEX_Init();
-if (g_oled_mutex == NULL) {
-    return;
-}
-SF_peripheral_init();
+    if (g_oled_mutex == NULL) {
+        return;
+    }
+    SF_peripheral_init();
 
-/* 在联网之前启动火情与SGP30任务 */
-osThreadAttr_t local_options = {
-    .stack_size = TASK_STACK_SIZE,
-    .priority = osPriorityNormal,
-};
+    uint8_t nv_data[64] = {0};
+    hi_nv_save_sensor_threshold saved = {0};
 
-local_options.name = "fire_detect_task";
-flame_task_id = osThreadNew(fire_detect_task, NULL, &local_options);
+    /* 首次使用时的默认阈值，可自行修改 */
+    sys_msg_data.nvFlash.humi_lower = 30;
+    sys_msg_data.nvFlash.humi_upper = 70;
 
-local_options.name = "sgp30_task";
-sgp30_task_id = osThreadNew(sgp30_task, NULL, &local_options);
+    if (hi_nv_read(0xA0, nv_data, sizeof(nv_data), 0)
+        == HI_ERR_SUCCESS) {
+        memcpy(&saved, nv_data, sizeof(saved));
+
+        if (saved.humi_lower < saved.humi_upper &&
+            saved.humi_upper <= 100) {
+            sys_msg_data.nvFlash.humi_lower = saved.humi_lower;
+            sys_msg_data.nvFlash.humi_upper = saved.humi_upper;
+        }
+    }
+
+    /* 在联网之前启动火情与SGP30任务 */
+    osThreadAttr_t local_options = {
+        .stack_size = TASK_STACK_SIZE,
+        .priority = osPriorityNormal,
+    };
+
+    local_options.name = "fire_detect_task";
+    flame_task_id = osThreadNew(fire_detect_task, NULL, &local_options);
+
+    local_options.name = "sgp30_task";
+    sgp30_task_id = osThreadNew(sgp30_task, NULL, &local_options);
     if (nfc_connect_wifi_init() == -1) {
         return ;
     }
-    // if (WiFi_connectHotspots("YOUR_WIFI_SSID", "YOUR_WIFI_PASSWORD")!= WIFI_SUCCESS) {
+    // if (WiFi_connectHotspots("IoTtest", "114514985211")!= WIFI_SUCCESS) {
     // printf("WiFi connect failed\n");
     // return;
     // }

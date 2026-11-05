@@ -26,6 +26,7 @@
 #include "cJSON.h"
 #include "cmsis_os2.h"
 #include "sys_config.h"
+#include "hi_errno.h"
 
 #define MQTT_RECV_TASK_DELAY_TIME (100 * 1000) // us
 
@@ -89,6 +90,10 @@ uint8_t cJSON_Parse_Payload(uint8_t *payload)
                 sys_msg_data.nvFlash.humi_lower = json_down->valueint;
             }
             json_down = NULL;
+
+            uint8_t nv_data[64] = {0};
+            memcpy(nv_data, &sys_msg_data.nvFlash,sizeof(sys_msg_data.nvFlash));
+            ret = (hi_nv_write(0xA0, nv_data, sizeof(nv_data), 0)== HI_ERR_SUCCESS) ? 0 : 1;
         }
     }
 
@@ -97,7 +102,7 @@ uint8_t cJSON_Parse_Payload(uint8_t *payload)
     json_command_name = NULL;
     root = NULL;
 
-    return 0;
+    return ret;
 }
 
 // 向云端发送返回值

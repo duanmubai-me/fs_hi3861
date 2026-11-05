@@ -96,6 +96,7 @@ void oled_show_task(void)
                 SSD1306_ShowStr(0, OLED_TEXT8_LINE_6,oledShowBuff, TEXT_SIZE_8);
                  memset_s((char *)oledShowBuff, sizeof(oledShowBuff), 0, sizeof(oledShowBuff));
             }
+            SSD1306_ShowStr(72,OLED_TEXT8_LINE_5,(unsigned char *)(sys_msg_data.nvFlash.smartControl_flag != 0 ? "Auto: On " : "Auto: Off"),TEXT_SIZE_8);
             /* 最后一行右侧显示风扇状态 */
             SSD1306_ShowStr(72,OLED_TEXT8_LINE_6,(unsigned char *)(sys_msg_data.fanStatus != 0 ? "FAN: ON " : "FAN: OFF"),TEXT_SIZE_8);
             hi_watchdog_feed();
