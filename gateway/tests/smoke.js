@@ -1,8 +1,8 @@
 'use strict'
 
 // gateway 冒烟测试：纯 Node（node:http + node:assert），不依赖任何外部包。
-// 启动真实 HTTP server 到端口 0，按 contract.md §6 逐项验证 mock 与未实现 provider。
-// 运行：node gateway/tests/smoke.js
+// 启动真实 HTTP server 到端口 0，按 contract.md §6 逐项验证 mock、未配置的 huawei
+// 与未实现的 local provider。运行：node gateway/tests/smoke.js
 
 const assert = require('node:assert/strict')
 const http = require('node:http')
@@ -311,7 +311,9 @@ async function testMockGateway(gateway, config, rid) {
 }
 
 async function testSkeletonProvider(baseConfig, providerName) {
-  const config = Object.assign({}, baseConfig, { provider: providerName })
+  // huawei 段显式置 null：本测试只验证“已实现但未配置”的降级语义，
+  // 不能读取 config/local.json 里的真实凭据，更不能发起真实云请求。
+  const config = Object.assign({}, baseConfig, { provider: providerName, huawei: null })
   const gateway = await startGateway({ config: config, logger: false })
   try {
     const healthRes = await request(gateway, 'GET', '/api/v1/health')
@@ -340,8 +342,25 @@ async function testSkeletonProvider(baseConfig, providerName) {
         }
       }
     )
-    assertError(commandRes, 501, 'NOT_IMPLEMENTED', providerName + ' command')
-    console.log('[smoke]    ' + providerName + ' 骨架 OK：health configured=false，state/command=501')
+
+    if (providerName === 'huawei') {
+      // huawei provider 已实现，但缺少应用侧配置：POST 仍按异步命令契约返回 202，
+      // 轮询结果必须是 rejected / NOT_IMPLEMENTED，不能伪造 applied。
+      expectStatus(commandRes, 202, providerName + ' command')
+      let view = null
+      for (let i = 0; i < 40; i += 1) {
+        view = await request(gateway, 'GET', commandRes.json.statusUrl)
+        if (view.json && view.json.status !== 'pending') break
+        await sleep(25)
+      }
+      expectStatus(view, 200, providerName + ' command status')
+      assert.equal(view.json.status, 'rejected', providerName + ' 未配置时命令应 rejected')
+      assert.equal(view.json.result.errorCode, 'NOT_IMPLEMENTED', providerName + ' 未配置时错误码')
+      console.log('[smoke]    huawei 已实现但未配置：POST 202 → rejected / NOT_IMPLEMENTED')
+    } else {
+      assertError(commandRes, 501, 'NOT_IMPLEMENTED', providerName + ' command')
+      console.log('[smoke]    ' + providerName + ' 骨架 OK：health configured=false，state/command=501')
+    }
   } finally {
     await closeServer(gateway.server)
   }
@@ -382,7 +401,7 @@ async function main() {
     console.log('[smoke] mock gateway: ' + gateway.url + ' deviceId=' + mockConfig.deviceId)
     await testMockGateway(gateway, mockConfig, rid)
 
-    console.log('[smoke] 11. huawei/local 未实现 provider')
+    console.log('[smoke] 11. huawei 未配置 / local 未实现 provider')
     await testSkeletonProvider(mockConfig, 'huawei')
     await testSkeletonProvider(mockConfig, 'local')
 

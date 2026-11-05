@@ -3,6 +3,7 @@
 // 错误码来源：doc/07 §7（统一错误码）。
 
 const CODES = {
+  PROVIDER_UNAVAILABLE: 'PROVIDER_UNAVAILABLE',
   INVALID_PAYLOAD: 'INVALID_PAYLOAD',
   UNSUPPORTED_VERSION: 'UNSUPPORTED_VERSION',
   UNSUPPORTED_CAPABILITY: 'UNSUPPORTED_CAPABILITY',
@@ -35,6 +36,7 @@ const CODES = {
 }
 
 const DESCRIPTIONS = {
+  PROVIDER_UNAVAILABLE: { message: '华为云请求失败', hint: '查看下方详情，检查 IAM 配置、IoTDA 地址和网络', retryable: true },
   INVALID_PAYLOAD: { message: '请求参数不合法', hint: '检查字段名、类型和必填项', retryable: false },
   UNSUPPORTED_VERSION: { message: '协议版本不受支持', hint: '三端需使用同一协议版本', retryable: false },
   UNSUPPORTED_CAPABILITY: { message: '设备不支持该功能', hint: '查看诊断页的能力信息', retryable: false },
@@ -54,7 +56,7 @@ const DESCRIPTIONS = {
     hint: '重新发起一次操作',
     retryable: true
   },
-  DEVICE_OFFLINE: { message: '设备离线', hint: '检查设备供电、Wi-Fi 与应用服务地址', retryable: true },
+  DEVICE_OFFLINE: { message: '设备离线', hint: '检查设备供电、Wi-Fi 与华为云设备状态', retryable: true },
   STALE_COMMAND: {
     message: '命令已过期，未执行',
     hint: '刷新状态后重新操作，避免执行旧命令',
@@ -90,7 +92,7 @@ const DESCRIPTIONS = {
   NFC_TAG_READ_ONLY: { message: '标签只读或已锁定', hint: '确认标签未被锁定，或更换标签', retryable: false },
   NFC_WRITE_FAILED: { message: '写入 NFC 记录失败', hint: '检查标签容量与贴合位置后重试', retryable: true },
   NFC_TIMEOUT: { message: 'NFC 操作超时', hint: '重新贴近标签并重试', retryable: true },
-  NETWORK_ERROR: { message: '无法连接应用服务', hint: '确认电脑/服务已启动、手机与电脑在同一网络', retryable: true },
+  NETWORK_ERROR: { message: '无法访问华为云', hint: '检查手机网络、华为云配置和 HTTPS 合法域名', retryable: true },
   TIMEOUT: { message: '操作超时，结果未知', hint: '先刷新状态核对，不要直接重复发送开泵命令', retryable: true },
   INVALID_INPUT: { message: '输入不合法', hint: '按页面提示修正后重试', retryable: false },
   UNKNOWN: { message: '未知错误', hint: '查看诊断页的最近回执', retryable: true }

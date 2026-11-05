@@ -48,7 +48,7 @@ static uint32_t SGP30_RecvData(uint8_t *data, size_t size)
     i2cData.receive_buf = data;
     i2cData.receive_len = size;
 
-    return hi_i2c_read(SHT20_I2C_IDX, SHT20_I2C_ADDR, &i2cData);
+    return hi_i2c_read(SGP30_I2C_IDX, SGP30_I2C_ADDR, &i2cData);
 }
 // 向从机设备 发送数据
 static uint32_t SGP30_WiteByteData(uint8_t byte1,uint8_t byte2)
@@ -58,7 +58,7 @@ static uint32_t SGP30_WiteByteData(uint8_t byte1,uint8_t byte2)
     i2cData.send_buf = buffer;
     i2cData.send_len = sizeof(buffer);
 
-    return hi_i2c_write(SHT20_I2C_IDX, SHT20_I2C_ADDR, &i2cData);
+    return hi_i2c_write(SGP30_I2C_IDX, SGP30_I2C_ADDR, &i2cData);
 }
 
 #define READ_TEMP_DATA_NUM 6
@@ -100,7 +100,7 @@ uint32_t SGP30_Init(void)
     hi_io_set_pull(HI_IO_NAME_GPIO_10, HI_IO_PULL_UP);
     hi_io_set_func(HI_IO_NAME_GPIO_10, HI_IO_FUNC_GPIO_10_I2C0_SDA);
 
-    result = hi_i2c_init(SHT20_I2C_IDX, SHT20_I2C_SPEED);
+    result = hi_i2c_init(SGP30_I2C_IDX, SGP30_I2C_SPEED);
     if (result != HI_ERR_SUCCESS) {
         printf("I2C sht20 Init status is 0x%x!!!\r\n", result);
         return result;

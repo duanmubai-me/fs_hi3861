@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+#include <stdio.h>
+#include <unistd.h>
+#include "securec.h"
+
 #include "sensor_collect_task.h"
 #include "hal_bsp_sht20.h"
 #include "hal_bsp_pcf8574.h"
@@ -23,36 +27,40 @@
 #include "oled_show_log.h"
 #include "sys_config.h"
 
+#include "mutex_lock.h"
+
 msg_data_t sys_msg_data = {0}; // 传感器的数据
 static uint8_t fan_gif_index = 0;
 #define FAN_GIF_INDEX_MAX 3
 
+extern system_value_t systemdata;
+
 margin_t bmp_number_1 = {
-    .top = 16 + 8,
+    .top = 0,
     .left = 8,
     .width = 16,
     .hight = 32,
 }; // 数字-十位
 margin_t bmp_number_2 = {
-    .top = 16 + 8,
+    .top = 0,
     .left = 24,
     .width = 16,
     .hight = 32,
 };                                                   // 数字-个位
 margin_t bmp_dian = {
-    .top = 32 + 8,
+    .top = 16,
     .left = 40,
     .width = 16,
     .hight = 16,
 };     // 小数点
 margin_t bmp_number_3 = {
-    .top = 32 + 8,
+    .top = 16,
     .left = 56,
     .width = 8,
     .hight = 16,
 }; // 数字-小数
 margin_t bmp_danwei = {
-    .top = 16 + 8,
+    .top = 0,
     .left = 52,
     .width = 16,
     .hight = 16,
@@ -69,6 +77,35 @@ margin_t bmp_image = {
 #define COEFFICIENT_100 100
 #define COEFFICIENT_1000 1000
 
+static void show_temperature(float temperature)
+{
+    char text[8] = {0};
+
+    /* 转为十分之一摄氏度，保留一位小数 */
+    int t10 = (int)(temperature * 10.0f +
+                    (temperature >= 0.0f ? 0.5f : -0.5f));
+
+    unsigned int value =
+        (unsigned int)(t10 < 0 ? -t10 : t10);
+
+    int len = sprintf_s(text, sizeof(text), "%s%u.%uC",
+                        t10 < 0 ? "-" : "",
+                        value / 10, value % 10);
+
+    if (len <= 0 || len > 7) {
+        return;
+    }
+
+    /* 补空格，覆盖上次较长数字留下的内容 */
+    for (int i = len; i < 7; i++) {
+        text[i] = ' ';
+    }
+    text[7] = '\0';
+
+    SSD1306_ShowStr(72, OLED_TEXT16_LINE_1,
+                   (unsigned char *)text, TEXT_SIZE_16);
+}
+
 /**
  * @brief  显示湿度页面
  * @note
@@ -77,7 +114,7 @@ margin_t bmp_image = {
  */
 void show_humi_page(float val)
 {
-    SSD1306_ShowStr(OLED_TEXT16_COLUMN_0, OLED_TEXT16_LINE_0, " Smart Farm", TEXT_SIZE_16);
+    //SSD1306_ShowStr(OLED_TEXT16_COLUMN_0, OLED_TEXT16_LINE_0, " Smart Farm", TEXT_SIZE_16);
 
     int x = (val * COEFFICIENT_100) / COEFFICIENT_1000;
     SSD1306_DrawBMP(bmp_number_1.left, bmp_number_1.top,
@@ -96,16 +133,17 @@ void show_humi_page(float val)
                     bmp_number_3.width, bmp_number_3.hight, bmp_8X16_number[x]); // 显示数字的小数位
 
     // 风扇动态显示
-    if (sys_msg_data.fanStatus == 0) {
-        SSD1306_DrawBMP(bmp_image.left, bmp_image.top,
-                        bmp_image.width, bmp_image.hight, bmp_48X48_fan_gif[0]); // 静态显示
-    } else {
-        fan_gif_index++;
-        if (fan_gif_index > FAN_GIF_INDEX_MAX)
-            fan_gif_index = 0;
-        SSD1306_DrawBMP(bmp_image.left, bmp_image.top,
-                        bmp_image.width, bmp_image.hight, bmp_48X48_fan_gif[fan_gif_index]); // 动态显示
-    }
+    // if (sys_msg_data.fanStatus == 0) {
+    //     SSD1306_DrawBMP(bmp_image.left, bmp_image.top,
+    //                     bmp_image.width, bmp_image.hight, bmp_48X48_fan_gif[0]); // 静态显示
+    // } else {
+    //     fan_gif_index++;
+    //     if (fan_gif_index > FAN_GIF_INDEX_MAX)
+    //         fan_gif_index = 0;
+    //     SSD1306_DrawBMP(bmp_image.left, bmp_image.top,
+    //                     bmp_image.width, bmp_image.hight, bmp_48X48_fan_gif[fan_gif_index]); // 动态显示
+    // }
+
 }
 
 /**
@@ -120,7 +158,12 @@ void sensor_collect_task(void)
     while (1) {
         // 采集传感器的值
         SHT20_ReadData(&temperature, &humidity);
-        show_humi_page(humidity);
+        if (osMutexAcquire(g_oled_mutex, osWaitForever) == osOK) {
+            show_humi_page(humidity);
+            show_temperature(temperature);
+
+            osMutexRelease(g_oled_mutex);
+        }
 
         sys_msg_data.temperature = (int)temperature;
         sys_msg_data.humidity = (int)humidity;

@@ -17,6 +17,14 @@ static_library("smartFarm_demo") {
         "mqtt_send_task.c",
         "mqtt_recv_task.c",
         "sensor_collect_task.c",
+        "mutex_lock.c",
+        "task/hal_bsp_pwm_rgb.c",
+        "task/uart_recv_task.c",
+        "task/key_user_task.c",
+        "task/oled_show_task.c",
+
+        "//vendor/hqyj/fs_hi3861/common/bsp/src/hal_bsp_aw2013.c",
+        "//vendor/hqyj/fs_hi3861/common/bsp/src/hal_bsp_sgp30.c",
         "//vendor/hqyj/fs_hi3861/common/bsp/src/oled_show_log.c",
         "//vendor/hqyj/fs_hi3861/common/bsp/src/hal_bsp_wifi.c",
         "//vendor/hqyj/fs_hi3861/common/bsp/src/hal_bsp_mqtt.c",
@@ -49,6 +57,7 @@ static_library("smartFarm_demo") {
     cflags += [ "-Wno-unused-parameter" ]
     include_dirs = [
         "./",
+        "./task",
         "//utils/native/lite/include",
         "//kernel/liteos_m/kal/cmsis",
         "//base/iot_hardware/peripheral/interfaces/kits",
@@ -61,4 +70,3 @@ static_library("smartFarm_demo") {
         "//vendor/hqyj/fs_hi3861/common/bsp/nfc"
     ]
 }
-

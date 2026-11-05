@@ -70,3 +70,8 @@ gateway/logs/
 
 # UI ’ß*þ/4ö§i
 tests/ui/artifacts/
+
+# Local IDE state, accidentally copied SDK, and generated NV backups
+.idea/
+demo/smartFarm/include/smartFarm/
+sdk-patches/nv-config-store/original/

@@ -135,9 +135,24 @@ async function main() {
 
   const automator = require(AUTOMATOR)
   let mp = null
+  let prevEnv = null
   try {
     mp = await connectAutomation(automator)
     console.log('automation connected')
+    // UI 冒烟固定用 mock 环境，避免本机保存过 gateway/云端配置导致失败；结束后恢复。
+    try {
+      prevEnv = await mp.callWxMethod('getStorageSync', 'smartfarm.env.v2.huawei-direct')
+    } catch (e) {
+      prevEnv = null
+    }
+    await mp.callWxMethod('setStorageSync', 'smartfarm.env.v2.huawei-direct', {
+      mode: 'mock',
+      baseUrl: 'http://127.0.0.1:8080',
+      deviceId: 'mock-farm-001',
+      pollIntervalMs: 5000,
+      staleAfterMs: 90000,
+      commandTimeoutMs: 9000
+    })
     mp.on('console', function (msg) {
       if (msg && msg.type === 'error') {
         consoleErrors.push(String(msg.args && msg.args.length ? msg.args.join(' ') : msg.text || msg.type))
@@ -274,6 +289,12 @@ async function main() {
     })
   } finally {
     if (mp) {
+      try {
+        if (prevEnv) await mp.callWxMethod('setStorageSync', 'smartfarm.env.v2.huawei-direct', prevEnv)
+        else await mp.callWxMethod('removeStorageSync', 'smartfarm.env.v2.huawei-direct')
+      } catch (e) {
+        /* ignore */
+      }
       try {
         await mp.disconnect()
       } catch (e) {

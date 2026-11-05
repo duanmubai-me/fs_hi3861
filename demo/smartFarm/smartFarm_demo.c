@@ -20,6 +20,13 @@
 
 #include "ohos_init.h"
 #include "cmsis_os2.h"
+#include "hi_errno.h"
+
+#include "hi_io.h"
+#include "hi_gpio.h"
+#include "hi_uart.h"
+#include "stdbool.h"
+
 #include "cJSON.h"
 #include "hi_nv.h"
 #include "sys_config.h"
@@ -33,10 +40,25 @@
 #include "hal_bsp_pcf8574.h"
 #include "hal_bsp_nfc_to_wifi.h"
 
+#include "hal_bsp_aw2013.h"
+#include "hal_bsp_pwm_rgb.h"
+#include "hal_bsp_sgp30.h"
+
 #include "mqtt_send_task.h"
 #include "mqtt_recv_task.h"
 #include "sensor_collect_task.h"
 #include "oled_show_log.h"
+
+#include "oled_show_task.h"
+#include "uart_recv_task.h"
+#include "key_user_task.h"
+
+#include "lwip/netifapi.h"
+#include "lwip/sockets.h"
+#include "lwip/api_shell.h"
+
+#include "cmsis_os2.h"
+#include "mutex_lock.h"
 
 #define TASK_STACK_SIZE (5 * 1024)
 #define TASK_INIT_DELAY 1 // s
@@ -44,6 +66,41 @@
 osThreadId_t mqtt_send_task_id;      // mqtt 发布数据任务ID
 osThreadId_t mqtt_recv_task_id;      // mqtt 接收数据任务ID
 osThreadId_t sensor_collect_task_id; // 传感器采集任务ID
+
+osThreadId_t oled_show_task_id;
+osThreadId_t uart_recv_task_id;
+osThreadId_t uart1_recv_task_id;
+osThreadId_t udp_send_task_id;
+osThreadId_t udp_recv_task_id;
+osThreadId_t key_user_task_id;
+osThreadId_t key_test_task_id;
+osThreadId_t gas_test_task_id;
+osThreadId_t flame_task_id;
+osThreadId_t sgp30_task_id;
+tn_pcf8574_io_t pcf8574_io;
+system_value_t systemdata = {0};
+
+/**
+ * @brief  串口初始化
+ * @note   与STM32单片机之间的串口通信
+ * @retval None
+ */
+void uart_init(void)
+{
+    uint32_t ret = 0,ret1 = 0;
+    hi_io_set_func(HI_IO_NAME_GPIO_11, HI_IO_FUNC_GPIO_11_UART2_TXD);
+    hi_io_set_func(HI_IO_NAME_GPIO_12, HI_IO_FUNC_GPIO_12_UART2_RXD);
+       hi_uart_attribute uart_param1 = {
+        .baud_rate = 57600,
+        .data_bits = 8,
+        .stop_bits = 1,
+        .parity = 0,
+    };
+     ret1 = hi_uart_init(HI_UART_IDX_2, &uart_param1, NULL);
+    if (ret1 != HI_ERR_SUCCESS) {
+        printf("hi uart init is faild.\r\n");
+    }
+}
 
 void SF_peripheral_init(void)
 {
@@ -55,6 +112,15 @@ void SF_peripheral_init(void)
     SSD1306_CLS();  // 清屏
     SSD1306_ShowStr(OLED_TEXT16_COLUMN_0, OLED_TEXT16_LINE_0, " Smart Farm", TEXT_SIZE_16);
     nfc_Init();
+
+    AW2013_Init(); // 三色LED灯的初始化
+    AW2013_Control_Red(0);
+    AW2013_Control_Green(0);
+    AW2013_Control_Blue(0);
+    uart_init(); // 串口初始化
+    pwm_rgb_init();
+    pwm1_rgb_init();
+    SGP30_Init();
     usleep(TASK_INIT_DELAY);
 }
 int nfc_connect_wifi_init(void)
@@ -147,14 +213,35 @@ int mqtt_init(void)
 
     return 0;
 }
+
 static void smartFarm_Project_example(void)
 {
     printf("Enter smartFarm_Project_example()!\r\n");
     p_MQTTClient_sub_callback = &mqttClient_sub_callback;
-    SF_peripheral_init();
+    MUTEX_Init();
+if (g_oled_mutex == NULL) {
+    return;
+}
+SF_peripheral_init();
+
+/* 在联网之前启动火情与SGP30任务 */
+osThreadAttr_t local_options = {
+    .stack_size = TASK_STACK_SIZE,
+    .priority = osPriorityNormal,
+};
+
+local_options.name = "fire_detect_task";
+flame_task_id = osThreadNew(fire_detect_task, NULL, &local_options);
+
+local_options.name = "sgp30_task";
+sgp30_task_id = osThreadNew(sgp30_task, NULL, &local_options);
     if (nfc_connect_wifi_init() == -1) {
         return ;
     }
+    // if (WiFi_connectHotspots("YOUR_WIFI_SSID", "YOUR_WIFI_PASSWORD")!= WIFI_SUCCESS) {
+    // printf("WiFi connect failed\n");
+    // return;
+    // }
     mqtt_init();
     // NV值读出
     // result_code = hi_factory_nv_read(NV_ID, &sys_msg_data.nvFlash, sizeof(hi_nv_save_sensor_threshold), 0);
@@ -191,6 +278,30 @@ static void smartFarm_Project_example(void)
     sensor_collect_task_id = osThreadNew((osThreadFunc_t)sensor_collect_task, NULL, &options);
     if (sensor_collect_task_id != NULL) {
         printf("ID = %d, Create sensor_collect_task_id is OK!\r\n", sensor_collect_task_id);
+    }
+
+    /********************************** OLED显示任务 **********************************/
+    options.name = "oled_show_task";
+    options.priority = osPriorityNormal;
+    oled_show_task_id = osThreadNew((osThreadFunc_t)oled_show_task, NULL, &options);
+    if (oled_show_task_id != NULL) {
+        printf("ID = %d, Create oled_show_task_id is OK!\r\n", oled_show_task_id);
+    }
+    /********************************** 控制电机任务 **********************************/
+    options.name = "key_user_task";
+    options.priority = osPriorityNormal;
+    key_test_task_id = osThreadNew((osThreadFunc_t)key_test_task, NULL, &options);
+    if (key_test_task_id != NULL) {
+        printf("ID = %d, Create uart_recv_task_id is OK!\r\n", key_test_task_id);
+    }
+
+
+    /********************************** 燃气传感器任务 **********************************/
+    options.name = "gas_user_task";
+    options.priority = osPriorityNormal;
+    gas_test_task_id = osThreadNew((osThreadFunc_t)gas_test_task, NULL, &options);
+    if (gas_test_task_id != NULL) {
+        printf("ID = %d, Create uart_recv_task_id is OK!\r\n", gas_test_task_id);
     }
 }
 

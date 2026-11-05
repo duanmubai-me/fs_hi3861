@@ -10,6 +10,6 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "test": "node tests/smoke.js"
+    "test": "node tests/smoke.js && node tests/huawei.test.js"
   }
 }

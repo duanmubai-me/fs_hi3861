@@ -5,18 +5,11 @@ const device = require('../../services/device')
 
 const MODE_OPTIONS = [
   { value: 'mock', label: 'mock（应用内模拟设备）' },
-  { value: 'gateway', label: 'gateway（本机应用服务）' }
+  { value: 'gateway', label: 'gateway（华为云直连）' }
 ]
 
-// 与 config/index.js 的 DEFAULTS 保持一致。页面不得直接 require config，故在此声明默认值。
-const DEFAULT_ENV = {
-  mode: 'mock',
-  baseUrl: 'http://127.0.0.1:8080',
-  deviceId: 'mock-farm-001',
-  pollIntervalMs: 5000,
-  staleAfterMs: 90000,
-  commandTimeoutMs: 9000
-}
+// 通过设备接口读取当前环境，避免页面另存一份过期默认值。
+const DEFAULT_ENV = device.getEnv()
 
 const DEFAULT_FAULTS = {
   offline: false,
@@ -42,7 +35,7 @@ function modeLabelOf(mode) {
 }
 
 function modeTextOf(mode) {
-  return mode === 'gateway' ? 'gateway 应用服务' : 'mock 模拟'
+  return mode === 'gateway' ? 'gateway 华为云直连' : 'mock 模拟'
 }
 
 function normalizeFaults(faults) {
@@ -155,11 +148,11 @@ Page({
     view: null,
     banner: null,
     env: null,
-    envModeText: 'mock 模拟',
+    envModeText: modeTextOf(DEFAULT_ENV.mode),
     form: { mode: DEFAULT_ENV.mode, baseUrl: DEFAULT_ENV.baseUrl, deviceId: DEFAULT_ENV.deviceId },
     modeOptions: MODE_OPTIONS,
-    modeIndex: 0,
-    modeLabel: MODE_OPTIONS[0].label,
+    modeIndex: modeIndexOf(DEFAULT_ENV.mode),
+    modeLabel: modeLabelOf(DEFAULT_ENV.mode),
     formErrors: { baseUrl: '', deviceId: '' },
     envMessage: '',
     savingEnv: false,
@@ -171,7 +164,7 @@ Page({
     appVersion: '--',
     lastCommand: null,
     capabilitiesText: '暂无（尚未获取设备状态）',
-    isMock: true,
+    isMock: DEFAULT_ENV.mode === 'mock',
     faults: DEFAULT_FAULTS,
     mockBusy: false
   },
@@ -327,7 +320,7 @@ Page({
 
     if (!baseUrl) formErrors.baseUrl = '请输入应用服务地址（baseUrl）'
     else if (baseUrl.length > 200) formErrors.baseUrl = 'baseUrl 不能超过 200 个字符'
-    else if (!/^https?:\/\/[^\s]+$/i.test(baseUrl)) formErrors.baseUrl = 'baseUrl 需以 http:// 或 https:// 开头'
+    else if (!/^https:\/\/[^\s]+$/i.test(baseUrl)) formErrors.baseUrl = 'baseUrl 需以 https:// 开头，并填写 IoTDA 应用侧域名'
 
     if (!deviceId) formErrors.deviceId = '请输入设备 ID'
     else if (!/^[A-Za-z0-9_-]{1,64}$/.test(deviceId)) {

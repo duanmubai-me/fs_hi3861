@@ -27,21 +27,21 @@
           <text class="picker-arrow">切换</text>
         </view>
       </picker>
-      <view class="field-hint">mock 使用应用内模拟设备；gateway 连接本机应用服务。切换后需点击保存。</view>
+      <view class="field-hint">mock 使用模拟设备；gateway 由小程序直接访问华为云，无需电脑后端。切换后需点击保存。</view>
     </view>
 
     <view class="field">
-      <view class="field-label">应用服务地址 baseUrl</view>
+      <view class="field-label">华为云 IoTDA 应用侧 HTTPS 地址</view>
       <input
         class="input"
         value="{{form.baseUrl}}"
-        placeholder="http://127.0.0.1:8080"
+        placeholder="https://你的IoTDA应用侧域名"
         maxlength="200"
         disabled="{{savingEnv}}"
         bindinput="onBaseUrlInput"
         data-testid="diag-baseurl"
       />
-      <view class="field-hint">gateway 模式使用；mock 模式仅作展示。</view>
+      <view class="field-hint">填写 IoTDA 应用侧 HTTPS 地址；不要填写电脑 IP 或设备侧 MQTT 地址。</view>
       <view wx:if="{{formErrors.baseUrl}}" class="field-error">{{formErrors.baseUrl}}</view>
     </view>
 
@@ -83,14 +83,14 @@
       data-testid="diag-reset-env"
       bindtap="onResetEnv"
       disabled="{{savingEnv}}"
-    >恢复默认 mock 环境</button>
+    >恢复默认华为云直连</button>
     <view wx:if="{{envMessage}}" class="field-hint env-ok">{{envMessage}}</view>
   </view>
 
   <!-- 健康检查 -->
   <view class="card">
     <view class="card-title">健康检查</view>
-    <view class="card-subtitle">调用 device.health()，检查传输层与应用服务状态。</view>
+    <view class="card-subtitle">检查 IAM 鉴权和 IoTDA 设备查询；成功不代表设备在线或 Flash 已保存。</view>
     <button
       class="btn btn-ghost"
       data-testid="diag-health"

@@ -19,59 +19,55 @@
 #include "hi_i2c.h"
 #include "hi_io.h"
 #include "hi_errno.h"
+#include "mutex_lock.h"
 
 #include "hal_bsp_structAll.h"
 #include "hal_bsp_pcf8574.h"
 
 tn_pcf8574_io_t tmp_io = {0}; // IO扩展芯片的引脚
 
-void set_fan(uint8_t status)
+/* Caller-facing setters lock the complete read/modify/write operation. */
+static void pcf_update_bits(uint8_t mask, uint8_t value)
 {
-    if (status == true) {
-        tmp_io.bit.p0 = 1; // 风扇开启
-        PCF8574_Write(tmp_io.all);
-    } else if (status == false) {
-        tmp_io.bit.p0 = 0; // 风扇关闭
-        PCF8574_Write(tmp_io.all);
+    uint8_t next;
+    uint32_t ret;
+
+    if (g_pcf8574_mutex == NULL ||
+        osMutexAcquire(g_pcf8574_mutex, osWaitForever) != osOK) {
+        printf("PCF8574 mutex unavailable\r\n");
+        return;
+    }
+
+    next = (uint8_t)((tmp_io.all & (uint8_t)~mask) | (value & mask));
+    ret = PCF8574_Write(next);
+    if (ret == HI_ERR_SUCCESS) {
+        tmp_io.all = next;
+    }
+    osMutexRelease(g_pcf8574_mutex);
+
+    if (ret != HI_ERR_SUCCESS) {
+        printf("PCF8574 output failed: 0x%x\r\n", (unsigned int)ret);
     }
 }
-void set_D2(uint8_t status)
+
+void set_fan(uint8_t status)
 {
-    if (status == true) {
-        tmp_io.bit.p5 = 1; // D2开启
-        PCF8574_Write(tmp_io.all);
-    } else if (status == false) {
-        tmp_io.bit.p5 = 0; // D2关闭
-        PCF8574_Write(tmp_io.all);
-    }
+    pcf_update_bits(0x01, status ? 0x01 : 0x00);  /* P0: active high */
 }
 
 void set_buzzer(uint8_t status)
 {
-    if (status == true) {
-        tmp_io.bit.p1 = 0; // 蜂鸣器开启
-        PCF8574_Write(tmp_io.all);
-    } else if (status == false) {
-        tmp_io.bit.p1 = 1; // 蜂鸣器关闭
-        PCF8574_Write(tmp_io.all);
-    }
+    pcf_update_bits(0x02, status ? 0x00 : 0x02);  /* P1: active low */
 }
 
 void set_led(uint8_t status)
 {
-    if (status == true) {
-        tmp_io.bit.p2 = 0; // LED开启
-        PCF8574_Write(tmp_io.all);
-    } else if (status == false) {
-        tmp_io.bit.p2 = 1; // LED关闭
-        PCF8574_Write(tmp_io.all);
-    }
+    pcf_update_bits(0x04, status ? 0x00 : 0x04);  /* P2: active low */
 }
 
-void get_flame(uint8_t status)
+void set_D2(uint8_t status)
 {
-    
-    PCF8574_Read(status);
+    pcf_update_bits(0x20, status ? 0x20 : 0x00);  /* P5: GAS-CTRL */
 }
 
 uint32_t PCF8574_Write(const uint8_t send_data)
@@ -94,19 +90,20 @@ uint32_t PCF8574_Write(const uint8_t send_data)
 
 uint32_t PCF8574_Read(uint8_t *recv_data)
 {
-    uint32_t result = 0;
-    hi_i2c_data i2c_data = {0};
-    i2c_data.receive_buf = recv_data;
-    i2c_data.receive_len = 1;
+    uint32_t ret;
+    hi_i2c_data transfer = {0};
 
-    result = hi_i2c_read(PCF8574_I2C_ID, PCF8574_I2C_ADDR, &i2c_data);
-    if (result != HI_ERR_SUCCESS) {
-        printf("I2C PCF8574 Read result is 0x%x!!!\r\n", result);
-        printf("i2c_data.receive_buf == %x!!!\r\n", i2c_data.receive_buf);
-        return result;
+    if (recv_data == NULL || g_pcf8574_mutex == NULL) {
+        return HI_ERR_FAILURE;
     }
-
-    return HI_ERR_SUCCESS;
+    if (osMutexAcquire(g_pcf8574_mutex, osWaitForever) != osOK) {
+        return HI_ERR_FAILURE;
+    }
+    transfer.receive_buf = recv_data;
+    transfer.receive_len = 1;
+    ret = hi_i2c_read(PCF8574_I2C_ID, PCF8574_I2C_ADDR, &transfer);
+    osMutexRelease(g_pcf8574_mutex);
+    return ret;
 }
 
 uint32_t PCF8574_Init(void)
@@ -135,6 +132,5 @@ uint32_t PCF8574_Init(void)
     tmp_io.bit.p7 = 1; // LED关闭
 
 
-    PCF8574_Write(tmp_io.all); // v4.2版本开发板 关闭风扇，关闭蜂鸣器，关闭LED灯
-    return HI_ERR_SUCCESS;
+    return PCF8574_Write(tmp_io.all);
 }

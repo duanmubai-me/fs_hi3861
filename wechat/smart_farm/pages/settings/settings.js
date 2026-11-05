@@ -279,7 +279,8 @@ Page({
     const manual = opts.manual === true
     const prev = this.data
     const config = view.config || {}
-    const flameAvailable = !!(view.flame && view.flame.available)
+    const flameAvailable = !!(view.flame && view.flame.available && !view.flame.digital &&
+      typeof config.flameTrip === 'number' && typeof config.flameClear === 'number')
 
     let lowerDraft = prev.lowerDraft
     let upperDraft = prev.upperDraft

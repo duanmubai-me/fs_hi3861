@@ -4,7 +4,7 @@
 
 const config = require('../config/index')
 const { createMockTransport } = require('./transport-mock')
-const { createGatewayTransport } = require('./transport-gateway')
+const { createHuaweiTransport } = require('./transport-huawei')
 
 let current = null
 let currentKey = ''
@@ -18,7 +18,7 @@ function keyOf(env) {
  * @param {object} env
  */
 function createTransport(env) {
-  if (env.mode === 'gateway') return createGatewayTransport(env)
+  if (env.mode === 'gateway') return createHuaweiTransport(env)
   return createMockTransport(env)
 }
 

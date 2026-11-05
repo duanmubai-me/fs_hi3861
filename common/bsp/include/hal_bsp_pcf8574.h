@@ -17,6 +17,7 @@
 #define HAL_BSP_PCF8574_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "cmsis_os2.h"
 
 #define PCF8574_I2C_ADDR (0x43) // 器件的I2C从机地址
@@ -43,7 +44,6 @@ void set_buzzer(uint8_t status);
  * @retval None
  */
 void set_led(uint8_t status);
-void get_flame(uint8_t status);
 
 void set_D2(uint8_t status);
 /**

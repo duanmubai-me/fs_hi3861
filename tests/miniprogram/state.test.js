@@ -141,6 +141,7 @@ h.describe('state.normalizeState normal data', function () {
       available: true,
       raw: 130,
       text: '130',
+      digital: false,
       quality: 'ok',
       qualityText: '正常',
       direction: 'up'

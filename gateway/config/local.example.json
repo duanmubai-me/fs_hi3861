@@ -2,7 +2,21 @@
   "host": "127.0.0.1",
   "port": 8080,
   "provider": "mock",
-  "deviceId": "mock-farm-001",
+  "deviceId": "your-device-id",
   "staleAfterMs": 90000,
-  "commandTimeoutMs": 8000
+  "commandTimeoutMs": 15000,
+  "huawei": {
+    "deviceId": "your-device-id",
+    "projectId": "your-project-id",
+    "projectName": "",
+    "iotdaEndpoint": "xxxxx.iotda.cn-north-4.myhuaweicloud.com",
+    "iamEndpoint": "iam.cn-north-4.myhuaweicloud.com",
+    "iamDomain": "your-account-domain",
+    "iamUserName": "your-iam-user",
+    "iamPassword": "your-iam-password",
+    "verifyTls": true,
+    "requestTimeoutMs": 8000,
+    "mqttEndpoint": "x.x.x.x",
+    "mqttPort": 1883
+  }
 }

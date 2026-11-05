@@ -32,6 +32,7 @@ const MOTOR_TEXT = {
 }
 
 const CONFIG_STATUS_TEXT = {
+  unconfirmed: '未确认持久化',
   ok: '已保存',
   defaulted: '默认值',
   incompatible: '版本不兼容',
@@ -192,7 +193,7 @@ function normalizeState(raw, options) {
       flameTripText: config.flameTrip === undefined ? '--' : String(config.flameTrip),
       flameClearText: config.flameClear === undefined ? '--' : String(config.flameClear),
       alarmEnabled: config.alarmEnabled !== false,
-      configRevision: config.configRevision || 0,
+      configRevision: config.configRevision === null ? null : (config.configRevision || 0),
       configStatus: configStatus,
       configStatusText: textOf(CONFIG_STATUS_TEXT, configStatus, '--'),
       updatedAt: config.updatedAt || null,
@@ -211,7 +212,10 @@ function normalizeState(raw, options) {
     flame: {
       available: !!capabilities.flame && capabilities.flame.available !== false,
       raw: flame.raw,
-      text: units.formatRaw(flame.raw),
+      text: flame.digital
+        ? (typeof flame.detected === 'boolean' ? (flame.detected ? '检测到火焰' : '未检测到火焰') : '--')
+        : units.formatRaw(flame.raw),
+      digital: !!flame.digital,
       quality: flame.quality || 'ok',
       qualityText: qualityText(flame.quality || 'ok'),
       direction: (capabilities.flame && capabilities.flame.direction) || 'up'

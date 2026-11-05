@@ -1,5 +1,7 @@
 # 小程序与网关开发契约（v0.1，mock 优先）
 
+> 2026-11-05 更新：下文保留原 HTTP gateway 设计及状态/命令契约。当前小程序的 `gateway` 模式已经改为华为云 HTTPS 直连，默认启用，不调用本文的 `/api/v1` 后端接口；实现和当前验证见上级 README。数据状态、命令结果和 NFC 记录约定继续适用。下文“无 AppID/云实例”和“provider 骨架”是历史阶段描述，不是当前状态。
+
 本文是 `wechat/smart_farm/` 与 `gateway/` 的实现约定，**页面/服务/网关都按这里实现**。
 协议依据：`doc/04`（小程序）、`doc/05`（Flash 语义）、`doc/07`（错误码/幂等/优先级）。
 当前阶段没有 AppID、没有云实例、没有实物，因此：**默认 mock 模式必须完整可用**；gateway 的 huawei/local provider 只保留骨架。

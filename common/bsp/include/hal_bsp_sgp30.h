@@ -3,9 +3,9 @@
 
 #include "cmsis_os2.h"
 
-#define SHT20_I2C_ADDR (0xB0)   // 器件的I2C从机地址
-#define SHT20_I2C_IDX  0             // 模块的I2C总线号
-#define SHT20_I2C_SPEED 100000       // 100KHz
+#define SGP30_I2C_ADDR  (0xB0)
+#define SGP30_I2C_IDX   0
+#define SGP30_I2C_SPEED 100000
 
 uint32_t SGP30_ReadData(uint16_t *temp, uint16_t *humi);
 /**

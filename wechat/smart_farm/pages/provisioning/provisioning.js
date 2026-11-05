@@ -88,7 +88,7 @@ function describeEnvironment(capability) {
   } else if (!cap.supported) {
     environmentNote = '当前环境无法真实写入 NFC，将自动执行模拟写入；真实写入请在安卓真机使用 gateway 模式。'
   } else {
-    environmentNote = '当前为 gateway 环境：点击写入会尝试真实 NFC 标签写入。'
+    environmentNote = '当前为华为云直连环境：点击写入会尝试真实 NFC 标签写入，此操作无需电脑后端。'
   }
 
   return {

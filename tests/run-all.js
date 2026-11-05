@@ -21,7 +21,8 @@ const MINI_FILES = [
   'state.test.js',
   'mock-device.test.js',
   'device.test.js',
-  'regression.test.js'
+  'regression.test.js',
+  'huawei-direct.test.js'
 ]
 const TIMEOUT_MS = 180000
 

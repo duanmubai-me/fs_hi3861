@@ -88,7 +88,7 @@ function refreshErrorBanner(error, hasView) {
   return {
     level: 'err',
     text: error.message,
-    hint: error.hint || '请检查设备连接或应用服务地址后重试',
+    hint: error.hint || '请检查设备连接或华为云配置后重试',
     note: hasView
       ? '当前展示的是最后一次成功读取的数据，可再次刷新重试。'
       : '暂时没有可展示的数据，请确认设备已上电并联网后重试。',

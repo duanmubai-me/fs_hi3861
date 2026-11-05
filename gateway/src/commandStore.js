@@ -182,7 +182,7 @@ function createCommandStore(options) {
     }).catch(function (err) {
       const code = err && err.code ? String(err.code) : 'HARDWARE_ERROR'
       const status = code === 'TIMEOUT' ? 'unknown' : 'rejected'
-      const result = makeResult(entry, status, code, err && err.message ? String(err.message) : '', now())
+      const result = makeResult(entry, status, code, err && err.message ? String(err.message) : '', now)
       finalize(entry, status, result)
     })
   }

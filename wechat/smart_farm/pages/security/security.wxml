@@ -74,10 +74,10 @@
     <view class="card">
       <view class="card-title">火焰检测</view>
       <view class="row" data-testid="sec-flame">
-        <view class="label">火焰原始值</view>
+        <view class="label">{{view.flame.digital ? '火焰数字检测' : '火焰原始值'}}</view>
         <view class="row-right" wx:if="{{view.flame.available}}">
           <text class="value">{{view.flame.text}}</text>
-          <text class="unit">原始值</text>
+          <text wx:if="{{!view.flame.digital}}" class="unit">原始值</text>
         </view>
         <text wx:else class="badge badge-muted">未配置</text>
       </view>

@@ -9,8 +9,16 @@ const transportModule = require(h.SM_ROOT + '/services/transport')
 const assert = h.assert
 
 h.describe('device env / transport', function () {
-  h.it('reports the documented default mock env', function () {
-    assert.deepStrictEqual(device.getEnv(), {
+  h.it('defaults to Huawei direct and explicitly selects mock for offline tests', function () {
+    assert.strictEqual(device.getEnv().mode, 'gateway')
+    assert.strictEqual(device.transportName(), 'gateway')
+    assert.ok(device.transportDescribe().includes('华为云直连'))
+    const storage = {}
+    global.wx = {
+      getStorageSync: function (key) { return storage[key] },
+      setStorageSync: function (key, value) { storage[key] = value }
+    }
+    device.setEnv({
       mode: 'mock',
       baseUrl: 'http://127.0.0.1:8080',
       deviceId: 'mock-farm-001',
@@ -310,7 +318,7 @@ h.describe('device transport failures', function () {
       assert.strictEqual(result.transportName, 'stub')
       assert.strictEqual(result.env.mode, 'mock')
       assert.strictEqual(result.error.code, 'NETWORK_ERROR')
-      assert.strictEqual(result.error.message, '无法连接应用服务')
+      assert.strictEqual(result.error.message, '无法访问华为云')
       assert.strictEqual(result.error.detail, '连接被拒绝')
       assert.strictEqual(result.error.retryable, true)
     } finally {

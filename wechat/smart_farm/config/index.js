@@ -1,17 +1,21 @@
 // config/index.js
-// 运行环境配置。默认 mock（应用内模拟设备），联调时可切 gateway（本机应用服务）。
+// 默认 gateway（华为云 HTTPS 直连），mock 仅用于主动选择的模拟演示。
 // 页面通过 services/device 使用；不要在各页面里散落读写环境。
-const STORAGE_KEY = 'smartfarm.env.v1'
+const cloudConfig = require('./huawei')
+const publicCloud = cloudConfig.getPublicConfig()
+const LEGACY_STORAGE_KEY = 'smartfarm.env.v1'
+const STORAGE_KEY = 'smartfarm.env.v2.huawei-direct'
 
 const MODES = ['mock', 'gateway']
 
 const DEFAULTS = Object.freeze({
-  mode: 'mock',
-  baseUrl: 'http://127.0.0.1:8080',
-  deviceId: 'mock-farm-001',
+  mode: 'gateway',
+  baseUrl: publicCloud.baseUrl,
+  // 线上仓库（origin/master）硬件配置对应的华为云设备 ID；仅作默认值，可在诊断页覆盖
+  deviceId: publicCloud.deviceId,
   pollIntervalMs: 5000,
   staleAfterMs: 90000,
-  commandTimeoutMs: 9000
+  commandTimeoutMs: 25000
 })
 
 function clone(obj) {
@@ -46,7 +50,19 @@ function sanitize(raw) {
 function readStored() {
   if (!hasStorage()) return null
   try {
-    return wx.getStorageSync(STORAGE_KEY) || null
+    const current = wx.getStorageSync(STORAGE_KEY)
+    if (current) return current
+    const legacy = wx.getStorageSync(LEGACY_STORAGE_KEY)
+    if (legacy && typeof legacy === 'object') {
+      // 旧模式的 localhost 指向已停用的电脑后端，不能沿用到云端请求。
+      const migrated = Object.assign({}, legacy, {
+        mode: 'gateway', baseUrl: DEFAULTS.baseUrl, deviceId: DEFAULTS.deviceId,
+        commandTimeoutMs: DEFAULTS.commandTimeoutMs
+      })
+      if (typeof wx.setStorageSync === 'function') wx.setStorageSync(STORAGE_KEY, migrated)
+      return migrated
+    }
+    return null
   } catch (e) {
     return null
   }
@@ -71,7 +87,7 @@ function setEnv(patch) {
 function resetEnv() {
   if (hasStorage()) {
     try {
-      wx.removeStorageSync(STORAGE_KEY)
+      wx.setStorageSync(STORAGE_KEY, clone(DEFAULTS))
     } catch (e) {}
   }
   return clone(DEFAULTS)
@@ -80,7 +96,7 @@ function resetEnv() {
 function summarize(env) {
   const e = env || getEnv()
   if (e.mode === 'mock') return 'mock · 应用内模拟设备'
-  return 'gateway · ' + e.baseUrl
+  return 'gateway · 华为云直连 · ' + e.baseUrl
 }
 
 module.exports = {

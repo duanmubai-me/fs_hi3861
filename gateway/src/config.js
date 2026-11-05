@@ -1,7 +1,8 @@
 'use strict'
 
 // 配置加载顺序：config/default.json < 可选 config/local.json < GATEWAY_* 环境变量。
-// local.json 只用于本机联调，不应提交；这里不会读取或输出任何云端凭据。
+// local.json 只用于本机联调，不应提交；这里会把 huawei 段原样透传给 provider，
+// 但既不校验凭据内容，也不打印或输出其中的任何字段值。
 
 const fs = require('node:fs')
 const path = require('node:path')
@@ -56,13 +57,20 @@ function normalize(raw, source) {
     throw new Error(source + ' 的 commandTimeoutMs 必须是正整数')
   }
 
+  // huawei 段只在 huawei provider 内使用。这里做浅拷贝透传，避免 provider 意外修改
+  // 原始配置；凭据值不做任何校验/格式化，也绝不写日志。
+  const huawei = input.huawei && typeof input.huawei === 'object' && !Array.isArray(input.huawei)
+    ? Object.assign({}, input.huawei)
+    : null
+
   return {
     host: host,
     port: parsePort(input.port, source),
     provider: provider,
     deviceId: input.deviceId,
     staleAfterMs: input.staleAfterMs,
-    commandTimeoutMs: input.commandTimeoutMs
+    commandTimeoutMs: input.commandTimeoutMs,
+    huawei: huawei
   }
 }
 
