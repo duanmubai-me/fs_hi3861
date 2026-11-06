@@ -240,7 +240,12 @@ static void smartFarm_Project_example(void)
             sys_msg_data.nvFlash.humi_lower = saved.humi_lower;
             sys_msg_data.nvFlash.humi_upper = saved.humi_upper;
         }
+    } else {
+        printf("nv read failed, use default threshold\r\n");
     }
+    printf("humi threshold: upper=%d lower=%d\r\n",
+           sys_msg_data.nvFlash.humi_upper,
+           sys_msg_data.nvFlash.humi_lower);
 
     /* 在联网之前启动火情与SGP30任务 */
     osThreadAttr_t local_options = {

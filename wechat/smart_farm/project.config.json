@@ -1,46 +1,50 @@
 {
-  "description": "智慧农业小程序（mock 优先开发版）。真实 AppID 由开发者本人在微信开发者工具中登录后替换，不要提交个人身份配置。",
-  "compileType": "miniprogram",
-  "miniprogramRoot": "./",
-  "projectname": "smart_farm",
-  "appid": "wxbf91759e8ba3459b",
-  "setting": {
-    "urlCheck": false,
-    "es6": true,
-    "enhance": true,
-    "postcss": true,
-    "minified": false,
-    "newFeature": false,
-    "coverView": true,
-    "nodeModules": false,
-    "autoAudits": false,
-    "checkInvalidKey": true,
-    "checkSiteMap": true,
-    "uploadWithSourceMap": true,
-    "compileHotReLoad": true,
-    "useIsolateContext": true,
-    "useCompilerModule": true,
-    "compileWorklet": false,
-    "uglifyFileName": false,
-    "packNpmManually": false,
-    "packNpmRelationList": [],
-    "minifyWXSS": true,
-    "minifyWXML": true,
-    "localPlugins": false,
-    "disableUseStrict": false,
-    "useCompilerPlugins": false,
-    "condition": false,
-    "babelSetting": {
-      "ignore": [],
-      "disablePlugins": [],
-      "outputPath": ""
-    }
-  },
-  "condition": {},
-  "simulatorPluginLibVersion": {},
-  "packOptions": {
-    "ignore": [],
-    "include": []
-  },
-  "editorSetting": {}
+    "description": "智慧农业小程序（mock 优先开发版）。真实 AppID 由开发者本人在微信开发者工具中登录后替换，不要提交个人身份配置。",
+    "compileType": "miniprogram",
+    "miniprogramRoot": "",
+    "projectname": "smart_farm",
+    "appid": "wx129f589bbba22f36",
+    "setting": {
+        "urlCheck": false,
+        "es6": true,
+        "enhance": true,
+        "postcss": true,
+        "minified": false,
+        "newFeature": false,
+        "coverView": true,
+        "nodeModules": false,
+        "autoAudits": false,
+        "checkInvalidKey": true,
+        "checkSiteMap": true,
+        "uploadWithSourceMap": true,
+        "compileHotReLoad": true,
+        "useIsolateContext": true,
+        "useCompilerModule": true,
+        "compileWorklet": false,
+        "uglifyFileName": false,
+        "packNpmManually": false,
+        "packNpmRelationList": [],
+        "minifyWXSS": true,
+        "minifyWXML": true,
+        "localPlugins": false,
+        "disableUseStrict": false,
+        "useCompilerPlugins": false,
+        "condition": false,
+        "babelSetting": {
+            "ignore": [],
+            "disablePlugins": [],
+            "outputPath": ""
+        }
+    },
+    "condition": {},
+    "simulatorPluginLibVersion": {},
+    "packOptions": {
+        "ignore": [],
+        "include": []
+    },
+    "editorSetting": {
+        "tabIndent": "insertSpaces",
+        "tabSize": 4
+    },
+    "libVersion": "3.17.6"
 }

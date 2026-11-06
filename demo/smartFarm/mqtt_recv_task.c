@@ -91,9 +91,13 @@ uint8_t cJSON_Parse_Payload(uint8_t *payload)
             }
             json_down = NULL;
 
+            /* 每次收到新阈值都立即写入Flash，掉电后由开机流程读回 */
             uint8_t nv_data[64] = {0};
-            memcpy(nv_data, &sys_msg_data.nvFlash,sizeof(sys_msg_data.nvFlash));
-            ret = (hi_nv_write(0xA0, nv_data, sizeof(nv_data), 0)== HI_ERR_SUCCESS) ? 0 : 1;
+            uint32_t nv_ret;
+            memcpy(nv_data, &sys_msg_data.nvFlash, sizeof(sys_msg_data.nvFlash));
+            nv_ret = hi_nv_write(0xA0, nv_data, sizeof(nv_data), 0);
+            ret = (nv_ret == HI_ERR_SUCCESS) ? 0 : 1;
+            printf("save threshold to flash: 0x%x\r\n", (unsigned int)nv_ret);
         }
     }
 
