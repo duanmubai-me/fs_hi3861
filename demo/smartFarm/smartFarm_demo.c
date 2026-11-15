@@ -286,17 +286,20 @@ static void smartFarm_Project_example(void)
     options.stack_mem = NULL;
     options.stack_size = TASK_STACK_SIZE;
     options.priority = osPriorityNormal;
+    /********************************** MQTT上报任务 **********************************/
     mqtt_send_task_id = osThreadNew((osThreadFunc_t)mqtt_send_task, NULL, &options);
     if (mqtt_send_task_id != NULL) {
         printf("ID = %d, Create mqtt_send_task_id is OK!\r\n", mqtt_send_task_id);
     }
 
+    /********************************** MQTT接收任务 **********************************/
     options.name = "mqtt_recv_task";
     mqtt_recv_task_id = osThreadNew((osThreadFunc_t)mqtt_recv_task, NULL, &options);
     if (mqtt_recv_task_id != NULL) {
         printf("ID = %d, Create mqtt_recv_task_id is OK!\r\n", mqtt_recv_task_id);
     }
 
+    /********************************** 传感器采集任务 **********************************/
     options.name = "sensor_collect_task";
     sensor_collect_task_id = osThreadNew((osThreadFunc_t)sensor_collect_task, NULL, &options);
     if (sensor_collect_task_id != NULL) {

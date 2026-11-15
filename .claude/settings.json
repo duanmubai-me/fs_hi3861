@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd //c \"set PATH=E:\\\\downloads\\\\DevTools_Hi3861V100_v1.0\\\\hcc_riscv32_win\\\\bin;E:\\\\hi3861\\\\src\\\\prebuilts\\\\build-tools\\\\win64-x64\\\\bin;E:\\\\downloads\\\\DevTools_Hi3861V100_v1.0\\\\thirdparty\\\\python38;E:\\\\downloads\\\\DevTools_Hi3861V100_v1.0\\\\thirdparty\\\\python38\\\\Scripts;E:\\\\downloads\\\\DevTools_Hi3861V100_v1.0\\\\thirdparty\\\\Git\\\\bin;%PATH% && ninja -C out\\\\hispark_pegasus\\\\wifiiot_hispark_pegasus\")"
+    ]
+  }
+}
